@@ -50,8 +50,7 @@ export function userController(fastify: any, opts: any, next: any) {
     async (req: any, res: any) => {
       const { email } = req.body as User
 
-      if (await UserModel.findOne({ email }))
-        return res.code(400).send({ message: "User-microservice error: Email already used" })
+      if (await UserModel.findOne({ email })) return res.code(400).send("Email already used")
 
       // Creates the user
       const newUser = new UserModel(req.body)
@@ -72,19 +71,12 @@ export function userController(fastify: any, opts: any, next: any) {
     async (req: any, res: any) => {
       const { email } = req.body as User
 
-      if (email && (await UserModel.findOne({ email })))
-        return res.code(400).send({ message: "User-microservice error: Email already used" })
+      if (email && (await UserModel.findOne({ email }))) return res.code(400).send("Email already used")
 
       // Updates specified user
       const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true })
 
-      if (!updatedUser) {
-        return res.status(404).send({
-          success: false,
-          statusCode: 404,
-          message: "User-microservice error: Cannot find a user with the specified ID",
-        })
-      }
+      if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
       return updatedUser
     }
@@ -98,19 +90,12 @@ export function userController(fastify: any, opts: any, next: any) {
     async (req: any, res: any) => {
       const { email } = req.body as User
 
-      if (email && (await UserModel.findOne({ email })))
-        return res.code(400).send({ message: "User-microservice error: Email already used" })
+      if (email && (await UserModel.findOne({ email }))) return res.code(400).send("Email already used")
 
       // Updates specified user
       const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true })
 
-      if (!updatedUser) {
-        return res.status(404).send({
-          success: false,
-          statusCode: 404,
-          message: "User-microservice error: Cannot find a user with the specified ID",
-        })
-      }
+      if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
       return updatedUser
     }
@@ -127,13 +112,7 @@ export function userController(fastify: any, opts: any, next: any) {
       // Removes specified user
       const deletedUser = await UserModel.findByIdAndDelete(id)
 
-      if (!deletedUser) {
-        return res.status(404).send({
-          success: false,
-          statusCode: 404,
-          message: "User-microservice error: Cannot find a user with the specified ID",
-        })
-      }
+      if (!deletedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
       return deletedUser
     }
