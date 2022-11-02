@@ -1,0 +1,44 @@
+{
+  "name": "monolith-boilerplate",
+  "version": "1.0.0",
+  "description": "Voice Office monolithic boilerplate",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && copyfiles -u 1 src/**/*.yaml src/**/*.ejs dist/src",
+    "start": "export NODE_CONFIG_DIR=./src/config && node dist/src/index.js",
+    "dev": "export NODE_CONFIG_DIR=./src/config && nodemon src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gate42-srl/monolith-boilerplate.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gate42-srl/monolith-boilerplate/issues"
+  },
+  "homepage": "https://github.com/Gate42-srl/monolith-boilerplate#readme",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/config": "^3.3.0",
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/moment": "^2.13.0",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^18.11.9",
+    "copyfiles": "^2.4.1",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.7.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.4"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "config": "^3.3.8",
+    "fastify": "^4.9.2",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.4",
+    "mongoose": "^6.7.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.8.2"
+  }
+}
