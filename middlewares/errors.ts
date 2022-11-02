@@ -5,9 +5,9 @@ import config from "config"
  * Custom error handler for exceptions throwed during API requests
  * @param {Error} error The error throwed
  * @param {*} request The request that throwed the error
- * @param {*} reply The reply object to send information to the client
+ * @param {*} res The response object to send information to the client
  */
-module.exports = function (error: any, request: any, reply: any) {
+export const errorHandler = (error: any, request: any, res: any) => {
   try {
     if (error instanceof Error) error = JSON.parse(error.message)
   } catch (e) {
@@ -35,5 +35,5 @@ module.exports = function (error: any, request: any, reply: any) {
   }
 
   // Send the message to the client
-  reply.status(errorBody.statusCode).send(errorBody)
+  res.status(errorBody.statusCode).send(errorBody)
 }

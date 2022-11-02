@@ -1,4 +1,5 @@
 import { logger } from "../winston"
+import { UserModel } from "../models"
 import mongoose, { ConnectOptions } from "mongoose"
 import config from "config"
 import moment from "moment"
@@ -26,6 +27,26 @@ mongoose.connection.on("disconnected", function () {
 })
 
 /**
+ * @async @function dbCheck
+ * @description Utility function that check if the admin user is stored on db
+ */
+async function dbCheck() {
+  const users = await UserModel.find()
+  if (users.length) return
+
+  /* const admin = {
+      email: "",
+      role: "admin",
+      password: "Superman42",
+    } */
+
+  // Don't logs on test environment
+  if (process.env.NODE_ENV == "test") return
+
+  logger.info(`Database initialized`)
+}
+
+/**
  * @function connectToDB
  * @description Utility function that estabilish a connection to to the database
  */
@@ -43,7 +64,7 @@ export const connectToDB = async () => {
   if (process.env.NODE_ENV == "test") return connection
 
   // Check for init
-  // dbCheck()
+  dbCheck()
 
   console.log("MongoDB connected...", moment().format())
   // Logs on winston
