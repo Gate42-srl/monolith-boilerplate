@@ -1,0 +1,8 @@
+{
+  "PORT": 3000,
+  "JWT_SECRET": "",
+  "MODE": "development",
+  "DATABASE": "MongoDB",
+  "DATABASE_URI": "",
+  "LOGGER": false
+}

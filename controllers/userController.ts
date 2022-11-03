@@ -1,6 +1,11 @@
-import { UserModel } from "../models"
 import { User } from "../types"
 import { userControllerFactory } from "../validation"
+
+import config from "config"
+const database: string = config.get("DATABASE")
+
+import { GetById } from "../databases/PostgreSQL"
+import { UserModel } from "../models"
 
 // This controller is used to handler operations on users
 export function userController(fastify: any, opts: any, next: any) {
@@ -35,10 +40,16 @@ export function userController(fastify: any, opts: any, next: any) {
     async (req: any, res: any) => {
       const id = req.params.id
 
-      // Mongoose function to retrieve the user by its id
-      const user = await UserModel.findById(id)
+      if (database.toLocaleLowerCase() === "mongodb") {
+        // Mongoose function to retrieve the user by its id
+        const user = await UserModel.findById(id)
 
-      return user
+        return user
+      } else if (database.toLocaleLowerCase() === "postgresql") {
+        const user = GetById("users", id)
+
+        return user
+      }
     }
   )
 

@@ -23,7 +23,7 @@ mongoose.connection.on("disconnected", function () {
     timestamp: moment.utc().format(),
   })
   // After 5 seconds try to reconnect to db
-  setTimeout(connectToDB, 5000)
+  setTimeout(connectToMongoDB, 5000)
 })
 
 /**
@@ -47,10 +47,10 @@ async function dbCheck() {
 }
 
 /**
- * @function connectToDB
+ * @function connect
  * @description Utility function that estabilish a connection to to the database
  */
-export const connectToDB = async () => {
+export const connectToMongoDB = async () => {
   const connection = await mongoose
     .connect(config.get("DATABASE_URI"), {
       useFindAndModify: false,
@@ -61,7 +61,7 @@ export const connectToDB = async () => {
     .catch(console.error)
 
   // Don't init db and don't logs on test environment
-  if (process.env.NODE_ENV == "test") return connection
+  if (config.get("MODE") == "test") return connection
 
   // Check for init
   dbCheck()

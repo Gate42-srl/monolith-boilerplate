@@ -2,6 +2,7 @@ import { routes } from "./routes"
 import config from "config"
 import fastify from "fastify"
 import jwt from "fastify-jwt"
+import fastifyExpress from "fastify-express"
 
 const logger: boolean = config.get("LOGGER")
 
@@ -14,3 +15,5 @@ app.register(jwt, {
 
 // Register all our routes
 app.register(routes)
+
+app.register(fastifyExpress)

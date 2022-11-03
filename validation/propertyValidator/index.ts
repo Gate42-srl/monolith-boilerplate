@@ -1,1 +1,1 @@
-export * from "./user/factory"
+export * from "./userValidator"
