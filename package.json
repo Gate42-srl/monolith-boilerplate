@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && copyfiles -u 1 src/**/*.yaml src/**/*.ejs dist/src",
     "start": "export NODE_CONFIG_DIR=./src/config && node dist/src/index.js",
-    "dev": "export NODE_CONFIG_DIR=./src/config && nodemon ./index.ts"
+    "dev": "nodemon ./index.ts"
   },
   "repository": {
     "type": "git",
@@ -36,12 +36,12 @@
   "dependencies": {
     "bcrypt": "^5.1.0",
     "config": "^3.3.8",
-    "fastify": "^4.9.2",
+    "fastify": "^3.11.0",
     "fastify-express": "^0.2.0",
     "fastify-jwt": "^2.3.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.4",
-    "mongoose": "^6.7.0",
+    "mongoose": "^6.7.1",
     "morgan": "^1.10.0",
     "pg": "^8.8.0",
     "winston": "^3.8.2"

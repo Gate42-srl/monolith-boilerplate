@@ -17,3 +17,7 @@ app.register(jwt, {
 app.register(routes)
 
 app.register(fastifyExpress)
+
+app.get("/", function (req, reply) {
+  reply.code(200).send("TESTING")
+})

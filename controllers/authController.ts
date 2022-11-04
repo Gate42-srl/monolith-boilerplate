@@ -5,7 +5,7 @@ import { User } from "../types"
 const VALID_PASSWORD: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$/
 
 // This controller is used to handler operations on users
-export function authController(fastify: any, opts: any, next: any) {
+export function authController(fastify: any, opts: any, done: any) {
   fastify.post("/signup", async (req: any, res: any) => {
     const { email } = req.body
 
@@ -20,4 +20,6 @@ export function authController(fastify: any, opts: any, next: any) {
 
     return savedUser
   })
+
+  done()
 }

@@ -51,14 +51,7 @@ async function dbCheck() {
  * @description Utility function that estabilish a connection to to the database
  */
 export const connectToMongoDB = async () => {
-  const connection = await mongoose
-    .connect(config.get("DATABASE_URI"), {
-      useFindAndModify: false,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true,
-    } as ConnectOptions)
-    .catch(console.error)
+  const connection = await mongoose.connect(config.get("DATABASE_URI")!).catch(console.error)
 
   // Don't init db and don't logs on test environment
   if (config.get("MODE") == "test") return connection

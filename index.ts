@@ -6,8 +6,6 @@ import { connectToDB } from "./databases"
 import { logger } from "./winston"
 import moment from "moment"
 
-const appAddress = app.server.address() as AddressInfo
-
 // Set the app error handler
 app.setErrorHandler(errorHandler)
 
@@ -16,7 +14,8 @@ const result = connectToDB(config.get("DATABASE"))
 // if (!result)
 
 const start = async () => {
-  await app.listen(config.get("PORT"))
+  await app.listen(config.get("PORT"), "0.0.0.0")
+  const appAddress = app.server.address() as AddressInfo
 
   // Don't logs on test environment
   if (config.get("MODE") == "test") return

@@ -8,7 +8,7 @@ import { GetById } from "../databases/PostgreSQL"
 import { UserModel } from "../models"
 
 // This controller is used to handler operations on users
-export function userController(fastify: any, opts: any, next: any) {
+export function userController(fastify: any, opts: any, done: any) {
   fastify.decorate("authorize", async (request: any, res: any) => {
     const loggedUser = request.user
 
@@ -128,4 +128,6 @@ export function userController(fastify: any, opts: any, next: any) {
       return deletedUser
     }
   )
+
+  done()
 }
