@@ -1,5 +1,6 @@
-import { UserModel } from "../models"
-import { User } from "../types"
+import { token } from "morgan"
+import { refreshTokenModel, UserModel } from "../models"
+import { AuthPayload, User } from "../types"
 import { encrypter } from "../utils"
 
 //regex for password validation
@@ -14,6 +15,7 @@ export function authController(fastify: any, opts: any, done: any) {
     if (!VALID_PASSWORD.test(req.body.password))
       return res.code(400).send("Password should have one upper case, one special character and a minimum length of 8")
 
+    // Verifies if a user with given email already exists
     if (await UserModel.findOne({ email })) return res.code(400).send("Email already used")
 
     // Creates and saves the user
@@ -25,21 +27,65 @@ export function authController(fastify: any, opts: any, done: any) {
   fastify.post("/login", async (req: any, res: any) => {
     const { email, password } = req.body
 
+    // Verifies if the user with given email exists
     const user = await UserModel.findOne({ email })
+    if (!user) return res.code(404).send("Email not found")
 
-    if (!user) return res.code(404).send("Email not found.")
-
+    // Verifies if the given password matches with the one storted into the db
     const passwordMatched = await encrypter.comparePassword(password, user.password)
 
-    if (!passwordMatched) return res.code(401).send("Wrong password.")
+    if (!passwordMatched) return res.code(401).send("Wrong password")
 
+    // Updates last lagin fields
     const updateLastLogin = await UserModel.findByIdAndUpdate(user._id, { lastLogin: new Date() })
 
     if (!updateLastLogin) return res.code(500).send("Error updating user")
 
-    const token = await encrypter.generateJwt(user._id, user.email, user.role)
+    const claims = { _id: user._id, email: user.email, role: user.role }
 
-    return res.status(200).send(token)
+    // Genereates access and refresh tokens
+    const token = await encrypter.generateJwt("access", claims)
+    if (!token) res.code(500).send("Error during token creation")
+
+    const refreshToken = await encrypter.generateJwt("refresh", claims)
+    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+
+    // Stores the refrsh token into the database
+    await new refreshTokenModel({ token: refreshToken, userId: user._id }).save()
+
+    return res.status(200).send({ token, refreshToken })
+  })
+
+  fastify.post("/token", async (req: any, res: any) => {
+    const refreshToken = req.headers("x-auth-token")
+
+    // Checks if the refresh token is present
+    if (!refreshToken) res.code(401).send("Token not found")
+
+    // Checks if the refresh token exists into the database, so it is valid
+    if (!(await refreshTokenModel.findOne({ token: refreshToken }))) res.code(403).send("Invalid refresh token")
+
+    const { email } = await encrypter.decodeRefreshToken(refreshToken)
+
+    // Retrieves the user via its email
+    const user = await UserModel.findOne({ email })
+    if (!user) return res.code(404).send("Email not found")
+
+    const claims = { _id: user._id, email: user.email, role: user.role }
+
+    // Genereates new access and refresh tokens
+    const newToken = await encrypter.generateJwt("access", claims)
+    if (!token) res.code(500).send("Error during token creation")
+
+    const newRefreshToken = await encrypter.generateJwt("refresh", claims)
+    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+
+    // TODO: DELETE REFRESH TOKEN FIRST
+
+    // Stores the refrsh token into the database
+    await new refreshTokenModel({ token: newRefreshToken, userId: user._id }).save()
+
+    return res.status(200).send({ newToken, newRefreshToken })
   })
 
   done()

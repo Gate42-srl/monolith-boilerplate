@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt"
 import config from "config"
 import jwt from "jsonwebtoken"
-import mongoose from "mongoose"
+import { AuthPayload, userClaims } from "../types"
 
 const expire: Date = new Date(new Date().getTime() + 240 * 60000)
+const refreshExpire: Date = new Date(expire.getTime() * 6)
 
 /**
  * @function encryptPassword
@@ -27,6 +28,16 @@ export const comparePassword = (password: string, hash: string): Promise<boolean
   return bcrypt.compare(password, hash)
 }
 
-export const generateJwt = (_id: mongoose.Types.ObjectId, email: string, role: string): string => {
-  return jwt.sign({ _id, email, role, expire }, config.get("JWT_SECRET"))
+export const generateJwt = (type: string, claims: userClaims): string | null => {
+  const { _id, email, role } = claims
+
+  if (type === "access") return jwt.sign({ _id, email, role, expire }, config.get("JWT_SECRET"))
+  else if (type === "refresh") return jwt.sign({ email, expire: refreshExpire }, config.get("REFRESH_SECRET"))
+  else return null
+}
+
+export const decodeRefreshToken = async (refreshToken: string) => {
+  const decodedToken = (await jwt.verify(refreshToken, config.get("REFRESH_SECRET"))) as AuthPayload
+
+  return decodedToken
 }

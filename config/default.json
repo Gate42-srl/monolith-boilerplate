@@ -1,6 +1,7 @@
 {
   "PORT": 3000,
   "JWT_SECRET": "secretprova",
+  "REFRESH_SECRET": "refreshprova",
   "MODE": "development",
   "DATABASE": "MongoDB",
   "DATABASE_URI": "",
