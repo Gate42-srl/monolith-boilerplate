@@ -1,4 +1,9 @@
 import bcrypt from "bcrypt"
+import config from "config"
+import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
+
+const expire: Date = new Date(new Date().getTime() + 240 * 60000)
 
 /**
  * @function encryptPassword
@@ -20,4 +25,8 @@ export const hashPassword = (password: string): Promise<string> => {
  */
 export const comparePassword = (password: string, hash: string): Promise<boolean> => {
   return bcrypt.compare(password, hash)
+}
+
+export const generateJwt = (_id: mongoose.Types.ObjectId, email: string, role: string): string => {
+  return jwt.sign({ _id, email, role, expire }, config.get("JWT_SECRET"))
 }

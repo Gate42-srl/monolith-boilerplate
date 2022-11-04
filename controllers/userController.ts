@@ -48,7 +48,7 @@ export function userController(fastify: any, opts: any, done: any) {
       } else if (database.toLocaleLowerCase() === "postgresql") {
         const user = GetById("users", id)
 
-        return user
+        return res.status(200).send(user)
       }
     }
   )
@@ -70,7 +70,7 @@ export function userController(fastify: any, opts: any, done: any) {
       // Saves the user
       const savedUser = await newUser.save()
 
-      return savedUser
+      return res.status(200).send(savedUser)
     }
   )
 
@@ -89,7 +89,7 @@ export function userController(fastify: any, opts: any, done: any) {
 
       if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
-      return updatedUser
+      return res.status(200).send(updatedUser)
     }
   )
 
@@ -108,7 +108,7 @@ export function userController(fastify: any, opts: any, done: any) {
 
       if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
-      return updatedUser
+      return res.status(200).send(updatedUser)
     }
   )
 
@@ -125,7 +125,7 @@ export function userController(fastify: any, opts: any, done: any) {
 
       if (!deletedUser) return res.code(404).send("Cannot find a user with the specified ID")
 
-      return deletedUser
+      return res.status(200).send(deletedUser)
     }
   )
 

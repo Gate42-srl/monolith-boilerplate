@@ -1,5 +1,6 @@
 import { UserModel } from "../models"
 import { User } from "../types"
+import { encrypter } from "../utils"
 
 //regex for password validation
 const VALID_PASSWORD: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$/
@@ -18,7 +19,27 @@ export function authController(fastify: any, opts: any, done: any) {
     // Creates and saves the user
     const savedUser: User = await new UserModel(req.body).save()
 
-    return savedUser
+    return res.status(200).send(savedUser)
+  })
+
+  fastify.post("/login", async (req: any, res: any) => {
+    const { email, password } = req.body
+
+    const user = await UserModel.findOne({ email })
+
+    if (!user) return res.code(404).send("Email not found.")
+
+    const passwordMatched = await encrypter.comparePassword(password, user.password)
+
+    if (!passwordMatched) return res.code(401).send("Wrong password.")
+
+    const updateLastLogin = await UserModel.findByIdAndUpdate(user._id, { lastLogin: new Date() })
+
+    if (!updateLastLogin) return res.code(500).send("Error updating user")
+
+    const token = await encrypter.generateJwt(user._id, user.email, user.role)
+
+    return res.status(200).send(token)
   })
 
   done()

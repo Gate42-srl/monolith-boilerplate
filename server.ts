@@ -18,6 +18,6 @@ app.register(routes)
 
 app.register(fastifyExpress)
 
-app.get("/", function (req, reply) {
-  reply.code(200).send("TESTING")
+app.get("/", function (req, res) {
+  res.code(200).send("TESTING")
 })
