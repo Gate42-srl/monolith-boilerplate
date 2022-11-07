@@ -95,7 +95,6 @@ const removeClient = (clientId: string) => {
  * @function notify
  * @description send a message to a specific client or add the message in queue list
  * @param {String} userId the id ot the user that had to receive the message
- * @param {String} structureId the id of the structure involved
  * @param {Object} message the message that we want to send to the client
  */
 function notify(userId: string, message: string) {
