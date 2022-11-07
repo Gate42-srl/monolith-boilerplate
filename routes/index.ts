@@ -1,11 +1,11 @@
-import { userController } from "../controllers/userController"
-import { authController } from "../controllers/authController"
-import { socketController } from "../controllers/socketController"
+import { userHandler } from "./handlers/userHandler"
+import { authHandler } from "./handlers/authHandler"
+import { socketHandler } from "./handlers/socketHandler"
 
 export async function routes(fastify: any, opts: any, done: any) {
-  fastify.register(userController, { prefix: "/users" })
-  fastify.register(authController, { prefix: "/auth" })
-  fastify.register(socketController, { prefix: "/requestSocket" })
+  fastify.register(userHandler, { prefix: "/users" })
+  fastify.register(authHandler, { prefix: "/auth" })
+  fastify.register(socketHandler, { prefix: "/requestSocket" })
 
   done()
 }

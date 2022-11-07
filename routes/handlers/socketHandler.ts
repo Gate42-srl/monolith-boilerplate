@@ -6,7 +6,8 @@ const PING_TIMEOUT = 25000
 // A default value to connect to the websocket for the user
 const DEFAULT_USER_VALUE = "0000"
 
-export function socketController(fastify: any, opts: any, done: any) {
+// This handler is responsable for operations about websocket
+export function socketHandler(fastify: any, opts: any, done: any) {
   // Send a ping message to the client every PING_TIMEOUT milliseconds
   setInterval(pingClients, PING_TIMEOUT)
 

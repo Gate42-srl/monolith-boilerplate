@@ -3,7 +3,7 @@ import { connectToPostgreSQL } from "./PostgreSQL"
 
 export const connectToDB = async (database: string) => {
   let result: any
-  database = database.toLocaleLowerCase()
+  database = database.toLowerCase()
 
   switch (database) {
     case "mongodb":

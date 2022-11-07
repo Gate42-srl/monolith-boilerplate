@@ -1,100 +1,100 @@
-import { token } from "morgan"
-import { refreshTokenModel, UserModel } from "../models"
-import { User } from "../types"
-import { encrypter } from "../utils"
+import config from "config"
+const database = (config.get("DATABASE") as string).toLowerCase()
 
-//regex for password validation
-const VALID_PASSWORD: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$/
+import { Create, pool } from "../databases/PostgreSQL"
+import { refreshTokenModel } from "../models"
+import { QueryResult } from "pg"
 
-// This controller is used to handler operations on users
-export function authController(fastify: any, opts: any, done: any) {
-  fastify.post("/signup", async (req: any, res: any) => {
-    const { email } = req.body
+import { refreshToken } from "../types"
 
-    //if an user inserts a password who does not respect the pattern (one upper case, one special char, min. length 8) rejects the request
-    if (!VALID_PASSWORD.test(req.body.password))
-      return res.code(400).send("Password should have one upper case, one special character and a minimum length of 8")
+export const GetRefreshTokenFromUserId = async (userId: string) => {
+  let refreshToken: refreshToken | QueryResult<any> | null = null
 
-    // Verifies if a user with given email already exists
-    if (await UserModel.findOne({ email })) return res.code(400).send("Email already used")
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to retrieve the refresh token by id of the user it belongs to
+      refreshToken = await refreshTokenModel.findOne({ userId })
+      break
+    case "postgresql":
+      // PostgreSQL query
+      pool.query(`SELECT * FROM refreshTokens WHERE userId = $1`, [userId], (error, results) => {
+        if (error) throw error
 
-    // Creates and saves the user
-    const savedUser: User = await new UserModel(req.body).save()
+        refreshToken = results
+      })
+      break
+    default:
+      refreshToken = null
+      break
+  }
 
-    return res.status(200).send(savedUser)
-  })
+  return refreshToken
+}
 
-  fastify.post("/login", async (req: any, res: any) => {
-    const { email, password } = req.body
+export const GetRefreshTokenFromToken = async (token: string) => {
+  let refreshToken: refreshToken | QueryResult<any> | null = null
 
-    // Verifies if the user with given email exists
-    const user = await UserModel.findOne({ email })
-    if (!user) return res.code(404).send("Email not found")
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to retrieve the refresh token by its own value
+      refreshToken = await refreshTokenModel.findOne({ token })
+      break
+    case "postgresql":
+      // PostgreSQL query
+      pool.query(`SELECT * FROM refreshTokens WHERE token = $1`, [token], (error, results) => {
+        if (error) throw error
 
-    // Verifies if the given password matches with the one storted into the db
-    const passwordMatched = await encrypter.comparePassword(password, user.password)
+        refreshToken = results
+      })
+      break
+    default:
+      refreshToken = null
+      break
+  }
 
-    if (!passwordMatched) return res.code(401).send("Wrong password")
+  return refreshToken
+}
 
-    // Updates last lagin fields
-    const updateLastLogin = await UserModel.findByIdAndUpdate(user._id, { lastLogin: new Date() })
+export const CreateRefreshToken = async (newRefreshToken: refreshToken) => {
+  let refreshToken: refreshToken | void | null = null
 
-    if (!updateLastLogin) return res.code(500).send("Error updating user")
+  switch (database) {
+    case "mongodb":
+      // Mongoose function that creates and stores refresh token into the database
+      refreshToken = await new refreshTokenModel(newRefreshToken).save()
+      break
+    case "postgresql":
+      // PostgreSQL insert
+      refreshToken = Create("refreshTokens", newRefreshToken)
+      break
+    default:
+      refreshToken = null
+      break
+  }
 
-    const claims = { _id: user._id, email: user.email, role: user.role }
+  return refreshToken
+}
 
-    // Genereates access token
-    const token = await encrypter.generateJwt("access", claims)
-    if (!token) res.code(500).send("Error during token creation")
+export const DeleteRefreshTokenFromToken = async (token: string) => {
+  let refreshToken: refreshToken | QueryResult<any> | null = null
 
-    // Retrieves refresh token for the user if it already exists
-    let refreshToken = (await refreshTokenModel.findOne({ userId: user._id }))?.token
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to delete refresh token by its own value
+      refreshToken = await refreshTokenModel.findOneAndDelete({ token })
+      break
+    case "postgresql":
+      // PostgreSQL deletion
+      pool.query(`DELETE * FROM refreshTokens WHERE token = $1`, [token], (error, results) => {
+        if (error) throw error
 
-    // If refresh token doesn't exist, generate it and save it on database
-    if (!refreshToken) {
-      refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
-      if (!refreshToken) res.code(500).send("Error during refresh token creation")
+        refreshToken = results
+      })
+      break
+    default:
+      refreshToken = null
+      break
+  }
 
-      // Stores the refresh token into the database
-      await new refreshTokenModel({ token: refreshToken, userId: user._id }).save()
-    }
-
-    return res.status(200).send({ token, refreshToken })
-  })
-
-  fastify.post("/token", async (req: any, res: any) => {
-    const refreshToken = req.headers("x-auth-token")
-
-    // Checks if the refresh token is present
-    if (!refreshToken) res.code(401).send("Token not found")
-
-    // Checks if the refresh token exists into the database, so it is valid
-    if (!(await refreshTokenModel.findOne({ token: refreshToken }))) res.code(403).send("Invalid refresh token")
-
-    const { email } = await encrypter.decodeRefreshToken(refreshToken)
-
-    // Retrieves the user via its email
-    const user = await UserModel.findOne({ email })
-    if (!user) return res.code(404).send("Email not found")
-
-    const claims = { _id: user._id, email: user.email, role: user.role }
-
-    // Genereates new access and refresh tokens
-    const newToken = await encrypter.generateJwt("access", claims)
-    if (!token) res.code(500).send("Error during token creation")
-
-    const newRefreshToken = await encrypter.generateJwt("refresh", claims)
-    if (!refreshToken) res.code(500).send("Error during refresh token creation")
-
-    // Delete previous refresh token
-    const tokenToDelete = await refreshTokenModel.findOneAndDelete({ token: refreshToken })
-    if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
-
-    // Stores the refrsh token into the database
-    await new refreshTokenModel({ token: newRefreshToken, userId: user._id }).save()
-
-    return res.status(200).send({ newToken, newRefreshToken })
-  })
-
-  done()
+  return refreshToken
 }

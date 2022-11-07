@@ -1,133 +1,132 @@
-import { User } from "../types"
-import { userControllerFactory } from "../validation"
-
 import config from "config"
-const database: string = config.get("DATABASE")
+const database = (config.get("DATABASE") as string).toLowerCase()
 
-import { GetById } from "../databases/PostgreSQL"
+import { GetById, GetAll, Create, Update, Delete, pool } from "../databases/PostgreSQL"
 import { UserModel } from "../models"
+import { QueryResult } from "pg"
 
-// This controller is used to handler operations on users
-export function userController(fastify: any, opts: any, done: any) {
-  fastify.decorate("authorize", async (request: any, res: any) => {
-    const loggedUser = request.user
+import { User } from "../types"
 
-    if (loggedUser.role.toLowerCase() == "admin") return
+export const GetUserById = async (id: string) => {
+  let user: User | void | null
 
-    const validator = userControllerFactory(request)
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to retrieve the user by its id
+      user = await UserModel.findById(id)
+      break
+    case "postgresql":
+      // PostgreSQL query
+      user = GetById("users", id)
+      break
+    default:
+      user = null
+      break
+  }
 
-    if (!validator || !(await validator.isAuthorized())) return res.status(401).send({ error: "Not authorized" })
-  })
+  return user
+}
 
-  fastify.decorate("fieldNotToUpdate", async (request: any, res: any) => {
-    const loggedUser = request.user
+export const GetAllUsers = async () => {
+  let users: User[] | void
 
-    // If user role is admin, its authorized
-    if (loggedUser.role.toLowerCase() === "admin") return
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to retrieve all users
+      users = await UserModel.find()
+      break
+    case "postgresql":
+      // PostgreSQL query
+      users = GetAll("users")
+      break
+    default:
+      users = []
+      break
+  }
 
-    const fieldNotToUpdate = ["password", "role"]
+  return users
+}
 
-    fieldNotToUpdate.forEach((el) => {
-      delete request.body[el]
-    })
-  })
+export const GetUserByEmail = async (email: string) => {
+  let user: User | QueryResult<any> | null = null
 
-  fastify.get(
-    "/:id",
-    {
-      preValidation: [fastify.authorize],
-    },
-    async (req: any, res: any) => {
-      const id = req.params.id
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to retrieve the user by email
+      user = await UserModel.findOne({ email })
+      break
+    case "postgresql":
+      // PostgreSQL query
+      pool.query(`SELECT * FROM users WHERE email = $1`, [email], (error, results) => {
+        if (error) throw error
 
-      if (database.toLocaleLowerCase() === "mongodb") {
-        // Mongoose function to retrieve the user by its id
-        const user = await UserModel.findById(id)
+        user = results
+      })
+      break
+    default:
+      user = null
+      break
+  }
 
-        return user
-      } else if (database.toLocaleLowerCase() === "postgresql") {
-        const user = GetById("users", id)
+  return user
+}
 
-        return res.status(200).send(user)
-      }
-    }
-  )
+export const CreateUser = async (userToAdd: User) => {
+  let user: User | void | null
 
-  fastify.post(
-    "/",
-    {
-      preValidation: [fastify.authorize],
-    },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
+  switch (database) {
+    case "mongodb":
+      // Creates the user and saves it with mongoose function
+      user = await new UserModel(userToAdd).save()
+      break
+    case "postgresql":
+      // PostgreSQL insert
+      user = Create("users", userToAdd)
+      break
+    default:
+      user = null
+      break
+  }
 
-      if (await UserModel.findOne({ email })) return res.code(400).send("Email already used")
+  return user
+}
 
-      // Creates the user
-      const newUser = new UserModel(req.body)
-      newUser.role = "user"
+export const UpdateUser = async (userUpdate: any, id: string) => {
+  let user: User | void | null
 
-      // Saves the user
-      const savedUser = await newUser.save()
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to update specified user
+      user = await UserModel.findByIdAndUpdate(id, userUpdate, { new: true })
+      break
+    case "postgresql":
+      // PostgreSQL update
+      user = Update("users", userUpdate, id)
+      break
+    default:
+      user = null
+      break
+  }
 
-      return res.status(200).send(savedUser)
-    }
-  )
+  return user
+}
 
-  fastify.put(
-    "/:id",
-    {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
-    },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
+export const DeleteUser = async (id: string) => {
+  let user: User | void | null
 
-      if (email && (await UserModel.findOne({ email }))) return res.code(400).send("Email already used")
+  switch (database) {
+    case "mongodb":
+      // Mongoose function to remove specified user
+      user = await UserModel.findByIdAndDelete(id)
+      break
+    case "postgresql":
+      // PostgreSQL deletion
+      user = Delete("users", id)
+      break
+    default:
+      user = null
+      break
+  }
 
-      // Updates specified user
-      const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true })
-
-      if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
-
-      return res.status(200).send(updatedUser)
-    }
-  )
-
-  fastify.patch(
-    "/:id",
-    {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
-    },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
-
-      if (email && (await UserModel.findOne({ email }))) return res.code(400).send("Email already used")
-
-      // Updates specified user
-      const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true })
-
-      if (!updatedUser) return res.code(404).send("Cannot find a user with the specified ID")
-
-      return res.status(200).send(updatedUser)
-    }
-  )
-
-  fastify.delete(
-    "/:id",
-    {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
-    },
-    async (req: any, res: any) => {
-      const id = req.params.id
-
-      // Removes specified user
-      const deletedUser = await UserModel.findByIdAndDelete(id)
-
-      if (!deletedUser) return res.code(404).send("Cannot find a user with the specified ID")
-
-      return res.status(200).send(deletedUser)
-    }
-  )
-
-  done()
+  return user
 }
