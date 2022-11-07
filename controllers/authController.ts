@@ -1,6 +1,6 @@
 import { token } from "morgan"
 import { refreshTokenModel, UserModel } from "../models"
-import { AuthPayload, User } from "../types"
+import { User } from "../types"
 import { encrypter } from "../utils"
 
 //regex for password validation
@@ -43,15 +43,21 @@ export function authController(fastify: any, opts: any, done: any) {
 
     const claims = { _id: user._id, email: user.email, role: user.role }
 
-    // Genereates access and refresh tokens
+    // Genereates access token
     const token = await encrypter.generateJwt("access", claims)
     if (!token) res.code(500).send("Error during token creation")
 
-    const refreshToken = await encrypter.generateJwt("refresh", claims)
-    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+    // Retrieves refresh token for the user if it already exists
+    let refreshToken = (await refreshTokenModel.findOne({ userId: user._id }))?.token
 
-    // Stores the refrsh token into the database
-    await new refreshTokenModel({ token: refreshToken, userId: user._id }).save()
+    // If refresh token doesn't exist, generate it and save it on database
+    if (!refreshToken) {
+      refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
+      if (!refreshToken) res.code(500).send("Error during refresh token creation")
+
+      // Stores the refresh token into the database
+      await new refreshTokenModel({ token: refreshToken, userId: user._id }).save()
+    }
 
     return res.status(200).send({ token, refreshToken })
   })
@@ -80,7 +86,9 @@ export function authController(fastify: any, opts: any, done: any) {
     const newRefreshToken = await encrypter.generateJwt("refresh", claims)
     if (!refreshToken) res.code(500).send("Error during refresh token creation")
 
-    // TODO: DELETE REFRESH TOKEN FIRST
+    // Delete previous refresh token
+    const tokenToDelete = await refreshTokenModel.findOneAndDelete({ token: refreshToken })
+    if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
 
     // Stores the refrsh token into the database
     await new refreshTokenModel({ token: newRefreshToken, userId: user._id }).save()
