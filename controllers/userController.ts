@@ -81,7 +81,18 @@ export const CreateUser = async (userToAdd: User) => {
       break
     case "postgresql":
       // PostgreSQL insert
-      user = Create("users", userToAdd)
+      const newUser = {
+        _id: new UserModel(userToAdd)._id.toString(),
+        email: userToAdd.email,
+        password: userToAdd.password,
+        firstName: userToAdd.firstName,
+        lastName: userToAdd.lastName,
+        role: userToAdd.role,
+        status: userToAdd.status,
+        lastLogin: new Date(),
+      }
+
+      user = Create("users", newUser)
       break
     default:
       user = null

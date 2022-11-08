@@ -13,7 +13,7 @@ export const connectToPostgreSQL = () => {
 }
 
 export const GetById = (table: string, id: string) => {
-  pool.query(`SELECT * FROM ${table} WHERE id = $1`, [id], (error, results) => {
+  pool.query(`SELECT * FROM ${table} WHERE _id = $1`, [id], (error, results) => {
     if (error) throw error
 
     return results
