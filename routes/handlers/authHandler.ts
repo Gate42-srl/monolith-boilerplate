@@ -58,7 +58,7 @@ export function authHandler(fastify: any, opts: any, done: any) {
     if (!token) res.code(500).send("Error during token creation")
 
     // Calls database function to retrieve refresh token for the user if it already exists
-    let refreshToken = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken).token
+    let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken)?.token
 
     // If refresh token doesn't exist, generate it and save it on database
     if (!refreshToken) {
@@ -78,7 +78,7 @@ export function authHandler(fastify: any, opts: any, done: any) {
       preValidation: [fastify.authenticate],
     },
     async (req: any, res: any) => {
-      const refreshToken = req.headers("x-auth-token")
+      const refreshToken = req.headers.refresh
 
       // Checks if the refresh token is present
       if (!refreshToken) res.code(401).send("Token not found")
@@ -98,7 +98,7 @@ export function authHandler(fastify: any, opts: any, done: any) {
       const newToken = await encrypter.generateJwt("access", claims)
       if (!newToken) res.code(500).send("Error during token creation")
 
-      const newRefreshToken = await encrypter.generateJwt("refresh", claims)
+      const newRefreshToken = (await encrypter.generateJwt("refresh", claims)) as string
       if (!refreshToken) res.code(500).send("Error during refresh token creation")
 
       // Calls database function to delete previous refresh token
@@ -106,7 +106,7 @@ export function authHandler(fastify: any, opts: any, done: any) {
       if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
 
       // Calls database function to store the refresh token into the database
-      await CreateRefreshToken({ token: refreshToken, userId: user._id })
+      await CreateRefreshToken({ token: newRefreshToken, userId: user._id })
 
       return res.status(200).send({ newToken, newRefreshToken })
     }

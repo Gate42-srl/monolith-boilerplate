@@ -4,6 +4,6 @@
   "REFRESH_SECRET": "refreshprova",
   "MODE": "development",
   "DATABASE": "MongoDB",
-  "DATABASE_URI": "",
+  "DATABASE_URI": "mongodb://localhost:27017/voice-office-tests",
   "LOGGER": false
 }
