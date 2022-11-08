@@ -72,39 +72,45 @@ export function authHandler(fastify: any, opts: any, done: any) {
     return res.status(200).send({ token, refreshToken })
   })
 
-  fastify.post("/token", async (req: any, res: any) => {
-    const refreshToken = req.headers("x-auth-token")
+  fastify.post(
+    "/token",
+    {
+      preValidation: [fastify.authenticate],
+    },
+    async (req: any, res: any) => {
+      const refreshToken = req.headers("x-auth-token")
 
-    // Checks if the refresh token is present
-    if (!refreshToken) res.code(401).send("Token not found")
+      // Checks if the refresh token is present
+      if (!refreshToken) res.code(401).send("Token not found")
 
-    // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
-    if (!(await GetRefreshTokenFromToken(refreshToken))) res.code(403).send("Invalid refresh token")
+      // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
+      if (!(await GetRefreshTokenFromToken(refreshToken))) res.code(403).send("Invalid refresh token")
 
-    const { email } = await encrypter.decodeRefreshToken(refreshToken)
+      const { email } = await encrypter.decodeToken("refresh", refreshToken)
 
-    // Calls database function to retrieve the user by its email
-    const user = (await GetUserByEmail(email)) as any
-    if (!user) return res.code(404).send("Email not found")
+      // Calls database function to retrieve the user by its email
+      const user = (await GetUserByEmail(email)) as any
+      if (!user) return res.code(404).send("Email not found")
 
-    const claims = { _id: user._id, email: user.email, role: user.role }
+      const claims = { _id: user._id, email: user.email, role: user.role }
 
-    // Genereates new access and refresh tokens
-    const newToken = await encrypter.generateJwt("access", claims)
-    if (!newToken) res.code(500).send("Error during token creation")
+      // Genereates new access and refresh tokens
+      const newToken = await encrypter.generateJwt("access", claims)
+      if (!newToken) res.code(500).send("Error during token creation")
 
-    const newRefreshToken = await encrypter.generateJwt("refresh", claims)
-    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+      const newRefreshToken = await encrypter.generateJwt("refresh", claims)
+      if (!refreshToken) res.code(500).send("Error during refresh token creation")
 
-    // Calls database function to delete previous refresh token
-    const tokenToDelete = await DeleteRefreshTokenFromToken(refreshToken)
-    if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
+      // Calls database function to delete previous refresh token
+      const tokenToDelete = await DeleteRefreshTokenFromToken(refreshToken)
+      if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
 
-    // Calls database function to store the refresh token into the database
-    await CreateRefreshToken({ token: refreshToken, userId: user._id })
+      // Calls database function to store the refresh token into the database
+      await CreateRefreshToken({ token: refreshToken, userId: user._id })
 
-    return res.status(200).send({ newToken, newRefreshToken })
-  })
+      return res.status(200).send({ newToken, newRefreshToken })
+    }
+  )
 
   done()
 }

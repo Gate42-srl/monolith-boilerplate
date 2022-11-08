@@ -1,4 +1,4 @@
-interface UserPayload {
+export interface UserPayload {
   _id: string
   email: string
   role: "admin" | "user"
@@ -6,7 +6,7 @@ interface UserPayload {
   iat?: number
 }
 
-interface RefreshUserPayload {
+export interface RefreshUserPayload {
   email: string
   expire?: Date
   iat?: number

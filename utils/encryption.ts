@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt"
 import config from "config"
 import jwt from "jsonwebtoken"
-import { AuthPayload, userClaims } from "../types"
+import { AuthPayload, RefreshUserPayload, UserPayload, userClaims } from "../types"
 
 const expire: Date = new Date(new Date().getTime() + 240 * 60000)
 const refreshExpire: Date = new Date(expire.getTime() * 6)
@@ -36,8 +36,11 @@ export const generateJwt = (type: string, claims: userClaims): string | null => 
   else return null
 }
 
-export const decodeRefreshToken = async (refreshToken: string) => {
-  const decodedToken = (await jwt.verify(refreshToken, config.get("REFRESH_SECRET"))) as AuthPayload
+export const decodeToken = async (type: string, token: string) => {
+  const decodedToken: UserPayload | RefreshUserPayload =
+    type === "access"
+      ? ((await jwt.verify(token, config.get("JWT_SECRET"))) as AuthPayload)
+      : ((await jwt.verify(token, config.get("REFRESH_SECRET"))) as AuthPayload)
 
   return decodedToken
 }

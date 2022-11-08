@@ -38,7 +38,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.get(
     "/",
     {
-      preValidation: [fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize],
     },
     async (req: any, res: any) => {
       // Calls database function to retrieve the user from its id
@@ -54,7 +54,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.get(
     "/:id",
     {
-      preValidation: [fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize],
     },
     async (req: any, res: any) => {
       const id = req.params.id
@@ -72,7 +72,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.post(
     "/",
     {
-      preValidation: [fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -93,7 +93,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.put(
     "/:id",
     {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.fieldNotToUpdate],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -113,7 +113,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.patch(
     "/:id",
     {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.fieldNotToUpdate],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -133,7 +133,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.delete(
     "/:id",
     {
-      preValidation: [fastify.authorize, fastify.fieldNotToUpdate],
+      preValidation: [fastify.authenticate, fastify.authorize],
     },
     async (req: any, res: any) => {
       const id = req.params.id

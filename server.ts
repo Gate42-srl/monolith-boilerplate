@@ -1,4 +1,5 @@
 import { routes } from "./routes"
+import { default as authMiddleware } from "./middlewares/auth"
 import config from "config"
 import fastify from "fastify"
 import jwt from "fastify-jwt"
@@ -16,6 +17,10 @@ app.register(jwt, {
 // Register all our routes
 app.register(routes)
 
+// Use auth middleware
+app.decorate("authenticate", authMiddleware)
+
+// Register fastify-Express
 app.register(fastifyExpress)
 
 app.get("/", function (req, res) {
