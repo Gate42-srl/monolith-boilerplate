@@ -9,9 +9,16 @@ import moment from "moment"
 // Set the app error handler
 app.setErrorHandler(errorHandler)
 
-// Connect to DB
-const result = connectToDB(config.get("DATABASE"))
-// if (!result)
+const databaseConnection = async () => {
+  // Connect to DB
+  let result = await connectToDB(config.get("DATABASE"))
+  if (!result) {
+    logger.error("DB connection failed...")
+    throw new Error("DB connection failed...")
+  }
+}
+
+databaseConnection()
 
 const start = async () => {
   await app.listen(config.get("PORT"), "0.0.0.0")

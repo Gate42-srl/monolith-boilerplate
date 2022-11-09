@@ -1,14 +1,25 @@
 import config from "config"
 import moment from "moment"
 import { Pool } from "pg"
+
 import { logger } from "../winston"
+import { dbCheck } from "./dbCheck"
 
 export const pool = new Pool(config.get("POSTGRES_SETTINGS"))
 
 export const connectToPostgreSQL = () => {
+  // Don't init db and don't log on test environment
+  if (config.get("MODE") == "test") return pool
+
+  // Check for init
+  dbCheck()
+
+  console.log("PostgreSQL connected...", moment().format())
+  // Logs on winston
   logger.info(`Database connection established`, {
     timestamp: moment.utc().format(),
   })
+
   return pool
 }
 

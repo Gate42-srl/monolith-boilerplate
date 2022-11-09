@@ -1,8 +1,9 @@
-import { logger } from "../winston"
-import { UserModel } from "../models"
-import mongoose, { ConnectOptions } from "mongoose"
 import config from "config"
 import moment from "moment"
+import mongoose from "mongoose"
+
+import { logger } from "../winston"
+import { dbCheck } from "./dbCheck"
 
 // Handle connection error then disconnect all connections
 mongoose.connection.on("error", (error) => {
@@ -27,33 +28,13 @@ mongoose.connection.on("disconnected", function () {
 })
 
 /**
- * @async @function dbCheck
- * @description Utility function that check if the admin user is stored on db
- */
-async function dbCheck() {
-  const users = await UserModel.find()
-  if (users.length) return
-
-  /* const admin = {
-      email: "",
-      role: "admin",
-      password: "Superman42",
-    } */
-
-  // Don't logs on test environment
-  if (process.env.NODE_ENV == "test") return
-
-  logger.info(`Database initialized`)
-}
-
-/**
  * @function connect
  * @description Utility function that estabilish a connection to to the database
  */
 export const connectToMongoDB = async () => {
   const connection = await mongoose.connect(config.get("DATABASE_URI")!).catch(console.error)
 
-  // Don't init db and don't logs on test environment
+  // Don't init db and don't log on test environment
   if (config.get("MODE") == "test") return connection
 
   // Check for init
