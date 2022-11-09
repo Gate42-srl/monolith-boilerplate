@@ -4,9 +4,12 @@
   "description": "Voice Office monolithic boilerplate",
   "main": "index.ts",
   "scripts": {
+    "installation": "npm install && npm install --prefix client",
     "build": "tsc -p tsconfig.json && copyfiles -u 1 src/**/*.yaml src/**/*.ejs dist/src",
     "start": "export NODE_CONFIG_DIR=./src/config && node dist/src/index.js",
-    "dev": "nodemon ./index.ts"
+    "server": "nodemon ./index.ts",
+    "client": "npm start --prefix client",
+    "dev": "concurrently \"npm run server\" \"npm run client\" "
   },
   "repository": {
     "type": "git",
@@ -35,6 +38,7 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
+    "concurrently": "^3.6.0",
     "config": "^3.3.8",
     "fastify": "^3.11.0",
     "fastify-express": "^0.2.0",
