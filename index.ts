@@ -20,9 +20,15 @@ const start = async () => {
   // Don't logs on test environment
   if (config.get("MODE") == "test") return
 
-  console.log(`Server listening on ${appAddress.port} ${moment()} in ${config.get("MODE")} mode`)
+  console.log(
+    `Server listening on ${appAddress.port} ${moment()} in ${config.get("MODE")} mode using ${config.get(
+      "DATABASE"
+    )} database`
+  )
 
-  logger.info(`Server listening on ${appAddress.port} in ${config.get("MODE")} mode`)
+  logger.info(
+    `Server listening on ${appAddress.port} in ${config.get("MODE")} mode using ${config.get("DATABASE")} database`
+  )
 }
 
 // Start the server

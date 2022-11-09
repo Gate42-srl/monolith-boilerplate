@@ -25,6 +25,9 @@ export function authHandler(fastify: any, opts: any, done: any) {
     // Calls database function to verify if a user with given email already exists
     if (await GetUserByEmail(email)) return res.code(400).send("Email already used")
 
+    // If no role is passed, we just set user role by default
+    if (!req.body.role) req.body.role = "user"
+
     // Calls database function to create and save the user
     const savedUser = await CreateUser(req.body)
 

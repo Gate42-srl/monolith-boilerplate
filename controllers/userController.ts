@@ -3,12 +3,12 @@ const database = (config.get("DATABASE") as string).toLowerCase()
 
 import { GetById, GetAll, Create, Update, Delete, pool } from "../databases/PostgreSQL"
 import { UserModel } from "../models"
-import { QueryResult } from "pg"
 
 import { User } from "../types"
+import { encrypter } from "../utils"
 
 export const GetUserById = async (id: string) => {
-  let user: User | void | null
+  let user: User | null
 
   switch (database) {
     case "mongodb":
@@ -17,7 +17,7 @@ export const GetUserById = async (id: string) => {
       break
     case "postgresql":
       // PostgreSQL query
-      user = GetById("users", id)
+      user = await GetById("users", id)
       break
     default:
       user = null
@@ -28,7 +28,7 @@ export const GetUserById = async (id: string) => {
 }
 
 export const GetAllUsers = async () => {
-  let users: User[] | void
+  let users: User[] | null
 
   switch (database) {
     case "mongodb":
@@ -37,7 +37,7 @@ export const GetAllUsers = async () => {
       break
     case "postgresql":
       // PostgreSQL query
-      users = GetAll("users")
+      users = await GetAll("users")
       break
     default:
       users = []
@@ -48,7 +48,7 @@ export const GetAllUsers = async () => {
 }
 
 export const GetUserByEmail = async (email: string) => {
-  let user: User | QueryResult<any> | null = null
+  let user: User | null
 
   switch (database) {
     case "mongodb":
@@ -57,11 +57,7 @@ export const GetUserByEmail = async (email: string) => {
       break
     case "postgresql":
       // PostgreSQL query
-      pool.query(`SELECT * FROM users WHERE email = $1`, [email], (error, results) => {
-        if (error) throw error
-
-        user = results
-      })
+      user = (await pool.query(`SELECT * FROM users WHERE email = $1`, [email])).rows[0]
       break
     default:
       user = null
@@ -72,7 +68,7 @@ export const GetUserByEmail = async (email: string) => {
 }
 
 export const CreateUser = async (userToAdd: User) => {
-  let user: User | void | null
+  let user: User | null
 
   switch (database) {
     case "mongodb":
@@ -81,18 +77,11 @@ export const CreateUser = async (userToAdd: User) => {
       break
     case "postgresql":
       // PostgreSQL insert
-      const newUser = {
-        _id: new UserModel(userToAdd)._id.toString(),
-        email: userToAdd.email,
-        password: userToAdd.password,
-        firstName: userToAdd.firstName,
-        lastName: userToAdd.lastName,
-        role: userToAdd.role,
-        status: userToAdd.status,
-        lastLogin: new Date(),
-      }
+      const newUser = Object.entries(new UserModel(userToAdd))[1][1]
+      newUser.password = await encrypter.hashPassword(newUser.password)
+      newUser._id = newUser._id.toString()
 
-      user = Create("users", newUser)
+      user = await Create("users", newUser)
       break
     default:
       user = null
@@ -103,7 +92,7 @@ export const CreateUser = async (userToAdd: User) => {
 }
 
 export const UpdateUser = async (userUpdate: any, id: string) => {
-  let user: User | void | null
+  let user: User | null
 
   switch (database) {
     case "mongodb":
@@ -112,7 +101,7 @@ export const UpdateUser = async (userUpdate: any, id: string) => {
       break
     case "postgresql":
       // PostgreSQL update
-      user = Update("users", userUpdate, id)
+      user = await Update("users", userUpdate, id)
       break
     default:
       user = null
@@ -123,7 +112,7 @@ export const UpdateUser = async (userUpdate: any, id: string) => {
 }
 
 export const DeleteUser = async (id: string) => {
-  let user: User | void | null
+  let user: User | null
 
   switch (database) {
     case "mongodb":
@@ -132,7 +121,7 @@ export const DeleteUser = async (id: string) => {
       break
     case "postgresql":
       // PostgreSQL deletion
-      user = Delete("users", id)
+      user = await Delete("users", id)
       break
     default:
       user = null

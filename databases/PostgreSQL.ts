@@ -1,34 +1,26 @@
+import config from "config"
+import moment from "moment"
 import { Pool } from "pg"
+import { logger } from "../winston"
 
-export const pool = new Pool({
-  user: "me",
-  host: "localhost",
-  database: "api",
-  password: "password",
-  port: 5432,
-})
+export const pool = new Pool(config.get("POSTGRES_SETTINGS"))
 
 export const connectToPostgreSQL = () => {
+  logger.info(`Database connection established`, {
+    timestamp: moment.utc().format(),
+  })
   return pool
 }
 
-export const GetById = (table: string, id: string) => {
-  pool.query(`SELECT * FROM ${table} WHERE _id = $1`, [id], (error, results) => {
-    if (error) throw error
-
-    return results
-  })
+export const GetById = async (table: string, id: string) => {
+  return (await pool.query(`SELECT * FROM ${table} WHERE _id = $1`, [id])).rows[0]
 }
 
-export const GetAll = (table: string) => {
-  pool.query(`SELECT * FROM ${table} ORDER BY id ASC`, (error, results) => {
-    if (error) throw error
-
-    return results
-  })
+export const GetAll = async (table: string) => {
+  return (await pool.query(`SELECT * FROM ${table} ORDER BY _id ASC`)).rows
 }
 
-export const Create = (table: string, element: any) => {
+export const Create = async (table: string, element: any) => {
   let keys: string[] = []
   let values: any[] = []
 
@@ -39,14 +31,18 @@ export const Create = (table: string, element: any) => {
 
   const columns = keys.join(", ")
 
-  pool.query(`INSERT INTO ${table} (${columns}) VALUES ($1, $2) RETURNING *`, values, (error, results) => {
-    if (error) throw error
+  let count: number = 0
+  const valuesCount = values
+    .map((value: any) => (value = ++count))
+    .join(", $")
+    .replace(/^/, "$")
 
-    return results
-  })
+  const result = await pool.query(`INSERT INTO ${table} (${columns}) VALUES (${valuesCount}) RETURNING *`, values)
+
+  return result.rows[0]
 }
 
-export const Update = (table: string, element: any, id: string) => {
+export const Update = async (table: string, element: any, id: string) => {
   let keys: string[] = []
   let values: any[] = []
 
@@ -64,17 +60,15 @@ export const Update = (table: string, element: any, id: string) => {
 
   set = set.concat(` = $${count - 1}`)
 
-  pool.query(`UPDATE ${table} SET ${set} WHERE id = $${count}`, [...values, id], (error, results) => {
-    if (error) throw error
+  await pool.query(`UPDATE ${table} SET ${set} WHERE _id = $${count}`, [...values, id])
 
-    return results
-  })
+  return (await pool.query(`SELECT * FROM ${table} WHERE _id = $1`, [id])).rows[0]
 }
 
-export const Delete = (table: string, id: string) => {
-  pool.query(`DELETE FROM ${table} WHERE id = $1`, [id], (error, results) => {
-    if (error) throw error
+export const Delete = async (table: string, id: string) => {
+  const deletedElement = (await pool.query(`SELECT * FROM ${table} WHERE _id = $1`, [id])).rows[0]
 
-    return results
-  })
+  await pool.query(`DELETE FROM ${table} WHERE _id = $1`, [id])
+
+  return deletedElement
 }

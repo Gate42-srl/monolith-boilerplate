@@ -8,7 +8,7 @@ import { QueryResult } from "pg"
 import { refreshToken } from "../types"
 
 export const GetRefreshTokenFromUserId = async (userId: string) => {
-  let refreshToken: refreshToken | QueryResult<any> | null = null
+  let refreshToken: refreshToken | null
 
   switch (database) {
     case "mongodb":
@@ -17,11 +17,7 @@ export const GetRefreshTokenFromUserId = async (userId: string) => {
       break
     case "postgresql":
       // PostgreSQL query
-      pool.query(`SELECT * FROM refreshTokens WHERE userId = $1`, [userId], (error, results) => {
-        if (error) throw error
-
-        refreshToken = results
-      })
+      refreshToken = (await pool.query(`SELECT * FROM refreshTokens WHERE userId = $1`, [userId])).rows[0]
       break
     default:
       refreshToken = null
@@ -32,7 +28,7 @@ export const GetRefreshTokenFromUserId = async (userId: string) => {
 }
 
 export const GetRefreshTokenFromToken = async (token: string) => {
-  let refreshToken: refreshToken | QueryResult<any> | null = null
+  let refreshToken: refreshToken | null
 
   switch (database) {
     case "mongodb":
@@ -41,11 +37,7 @@ export const GetRefreshTokenFromToken = async (token: string) => {
       break
     case "postgresql":
       // PostgreSQL query
-      pool.query(`SELECT * FROM refreshTokens WHERE token = $1`, [token], (error, results) => {
-        if (error) throw error
-
-        refreshToken = results
-      })
+      refreshToken = (await pool.query(`SELECT * FROM refreshTokens WHERE token = $1`, [token])).rows[0]
       break
     default:
       refreshToken = null
@@ -56,7 +48,7 @@ export const GetRefreshTokenFromToken = async (token: string) => {
 }
 
 export const CreateRefreshToken = async (newRefreshToken: refreshToken) => {
-  let refreshToken: refreshToken | void | null = null
+  let refreshToken: refreshToken | null
 
   switch (database) {
     case "mongodb":
@@ -65,7 +57,7 @@ export const CreateRefreshToken = async (newRefreshToken: refreshToken) => {
       break
     case "postgresql":
       // PostgreSQL insert
-      refreshToken = Create("refreshTokens", newRefreshToken)
+      refreshToken = await Create("refreshTokens", newRefreshToken)
       break
     default:
       refreshToken = null
@@ -84,12 +76,10 @@ export const DeleteRefreshTokenFromToken = async (token: string) => {
       refreshToken = await refreshTokenModel.findOneAndDelete({ token })
       break
     case "postgresql":
-      // PostgreSQL deletion
-      pool.query(`DELETE * FROM refreshTokens WHERE token = $1`, [token], (error, results) => {
-        if (error) throw error
+      refreshToken = (await pool.query(`SELECT * FROM refreshTokens WHERE token = $1`, [token])).rows[0]
 
-        refreshToken = results
-      })
+      // PostgreSQL deletion
+      await pool.query(`DELETE FROM refreshTokens WHERE token = $1`, [token])
       break
     default:
       refreshToken = null
