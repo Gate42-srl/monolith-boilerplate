@@ -1,5 +1,11 @@
-import { User } from "../../types"
-import { userHandlerFactory } from "../../validation"
+import { isValidObjectId } from "mongoose"
+import { validateBody } from "../../middlewares/requestValidator"
+import {
+  userHandlerFactory,
+  validateAddUserSchema,
+  validateUpdateUserSchema,
+  validatePatchUserSchema,
+} from "../../validation"
 
 import {
   CreateUser,
@@ -9,6 +15,7 @@ import {
   GetUserById,
   UpdateUser,
 } from "../../controllers/userController"
+import { User } from "../../types"
 
 // This handler is responsable for operations on users
 export function userHandler(fastify: any, opts: any, done: any) {
@@ -35,6 +42,25 @@ export function userHandler(fastify: any, opts: any, done: any) {
     })
   })
 
+  fastify.decorate("idValidatorParams", async (request: any, res: any) => {
+    const id = request.params.id
+
+    // Checking if the id is valid or not.
+    if (!isValidObjectId(id)) return res.status(400).send("Invalid Id")
+  })
+
+  fastify.decorate("validateAddUserBody", async (request: any, res: any) => {
+    validateBody(validateAddUserSchema)(request, res)
+  })
+
+  fastify.decorate("validateUpdateUserBody", async (request: any, res: any) => {
+    validateBody(validateUpdateUserSchema)(request, res)
+  })
+
+  fastify.decorate("validatePatchUserBody", async (request: any, res: any) => {
+    validateBody(validatePatchUserSchema)(request, res)
+  })
+
   fastify.get(
     "/",
     {
@@ -54,7 +80,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.get(
     "/:id",
     {
-      preValidation: [fastify.authenticate, fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.idValidatorParams],
     },
     async (req: any, res: any) => {
       const id = req.params.id
@@ -72,7 +98,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.post(
     "/",
     {
-      preValidation: [fastify.authenticate, fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.validateAddUserBody],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -93,7 +119,13 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.put(
     "/:id",
     {
-      preValidation: [fastify.authenticate, fastify.authorize, fastify.fieldNotToUpdate],
+      preValidation: [
+        fastify.authenticate,
+        fastify.authorize,
+        fastify.idValidatorParams,
+        fastify.validateUpdateUserBody,
+        fastify.fieldNotToUpdate,
+      ],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -113,7 +145,13 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.patch(
     "/:id",
     {
-      preValidation: [fastify.authenticate, fastify.authorize, fastify.fieldNotToUpdate],
+      preValidation: [
+        fastify.authenticate,
+        fastify.authorize,
+        fastify.idValidatorParams,
+        fastify.validatePatchUserBody,
+        fastify.fieldNotToUpdate,
+      ],
     },
     async (req: any, res: any) => {
       const { email } = req.body as User
@@ -133,7 +171,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
   fastify.delete(
     "/:id",
     {
-      preValidation: [fastify.authenticate, fastify.authorize],
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.idValidatorParams],
     },
     async (req: any, res: any) => {
       const id = req.params.id

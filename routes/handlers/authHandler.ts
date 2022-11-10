@@ -1,5 +1,8 @@
 import { refreshToken } from "../../types"
 
+import { validateBody } from "../../middlewares/requestValidator"
+import { validateAddUserSchema, validateLoginSchema } from "../../validation"
+
 import {
   CreateRefreshToken,
   DeleteRefreshTokenFromToken,
@@ -10,70 +13,83 @@ import { CreateUser, GetUserByEmail, UpdateUser } from "../../controllers/userCo
 
 import { encrypter } from "../../utils"
 
-//regex for password validation
-const VALID_PASSWORD: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$/
-
 // This handler is responsable for operations about authentication of users
 export function authHandler(fastify: any, opts: any, done: any) {
-  fastify.post("/signup", async (req: any, res: any) => {
-    const { email } = req.body
-
-    // if an user inserts a password who does not respect the pattern (one upper case, one special char, min. length 8) rejects the request
-    if (!VALID_PASSWORD.test(req.body.password))
-      return res.code(400).send("Password should have one upper case, one special character and a minimum length of 8")
-
-    // Calls database function to verify if a user with given email already exists
-    if (await GetUserByEmail(email)) return res.code(400).send("Email already used")
-
-    // If no role is passed, we just set user role by default
-    if (!req.body.role) req.body.role = "user"
-
-    // Calls database function to create and save the user
-    const savedUser = await CreateUser(req.body)
-
-    // Checks if the user was created
-    if (!savedUser) return res.status(500).send("Error during user creation")
-
-    return res.status(200).send(savedUser)
+  fastify.decorate("validateSignUpBody", async (request: any, res: any) => {
+    validateBody(validateAddUserSchema)(request, res)
   })
 
-  fastify.post("/login", async (req: any, res: any) => {
-    const { email, password } = req.body
+  fastify.decorate("validateLoginBody", async (request: any, res: any) => {
+    validateBody(validateLoginSchema)(request, res)
+  })
 
-    // Calls database function to verify if a user with given email already exists
-    const user = (await GetUserByEmail(email)) as any
-    if (!user) return res.code(404).send("Email not found")
+  fastify.post(
+    "/signup",
+    {
+      preValidation: [fastify.validateSignUpBody],
+    },
+    async (req: any, res: any) => {
+      const { email } = req.body
 
-    // Verifies if the given password matches with the one storted into the db
-    const passwordMatched = await encrypter.comparePassword(password, user.password)
+      // Calls database function to verify if a user with given email already exists
+      if (await GetUserByEmail(email)) return res.code(400).send("Email already used")
 
-    if (!passwordMatched) return res.code(401).send("Wrong password")
+      // If no role is passed, we just set user role by default
+      if (!req.body.role) req.body.role = "user"
 
-    // Calls database function to update last lagin field for user
-    const updateLastLogin = await UpdateUser({ lastLogin: new Date() }, user._id)
+      // Calls database function to create and save the user
+      const savedUser = await CreateUser(req.body)
 
-    if (!updateLastLogin) return res.code(500).send("Error updating user")
+      // Checks if the user was created
+      if (!savedUser) return res.status(500).send("Error during user creation")
 
-    const claims = { _id: user._id, email: user.email, role: user.role }
-
-    // Genereates access token
-    const token = await encrypter.generateJwt("access", claims)
-    if (!token) res.code(500).send("Error during token creation")
-
-    // Calls database function to retrieve refresh token for the user if it already exists
-    let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken)?.token
-
-    // If refresh token doesn't exist, generate it and save it on database
-    if (!refreshToken) {
-      refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
-      if (!refreshToken) res.code(500).send("Error during refresh token creation")
-
-      // Calls database function to store the refresh token into the database
-      await CreateRefreshToken({ token: refreshToken, userId: user._id })
+      return res.status(200).send(savedUser)
     }
+  )
 
-    return res.status(200).send({ token, refreshToken })
-  })
+  fastify.post(
+    "/login",
+    {
+      preValidation: [fastify.validateLoginBody],
+    },
+    async (req: any, res: any) => {
+      const { email, password } = req.body
+
+      // Calls database function to verify if a user with given email already exists
+      const user = (await GetUserByEmail(email)) as any
+      if (!user) return res.code(404).send("Email not found")
+
+      // Verifies if the given password matches with the one storted into the db
+      const passwordMatched = await encrypter.comparePassword(password, user.password)
+
+      if (!passwordMatched) return res.code(401).send("Wrong password")
+
+      // Calls database function to update last lagin field for user
+      const updateLastLogin = await UpdateUser({ lastLogin: new Date() }, user._id)
+
+      if (!updateLastLogin) return res.code(500).send("Error updating user")
+
+      const claims = { _id: user._id, email: user.email, role: user.role }
+
+      // Genereates access token
+      const token = await encrypter.generateJwt("access", claims)
+      if (!token) res.code(500).send("Error during token creation")
+
+      // Calls database function to retrieve refresh token for the user if it already exists
+      let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken)?.token
+
+      // If refresh token doesn't exist, generate it and save it on database
+      if (!refreshToken) {
+        refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
+        if (!refreshToken) res.code(500).send("Error during refresh token creation")
+
+        // Calls database function to store the refresh token into the database
+        await CreateRefreshToken({ token: refreshToken, userId: user._id })
+      }
+
+      return res.status(200).send({ token, refreshToken })
+    }
+  )
 
   fastify.post(
     "/token",
