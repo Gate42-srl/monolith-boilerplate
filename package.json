@@ -43,6 +43,7 @@
     "concurrently": "^3.6.0",
     "config": "^3.3.8",
     "fastify": "^3.11.0",
+    "fastify-cors": "^3.0.3",
     "fastify-express": "^0.2.0",
     "fastify-jwt": "^2.3.0",
     "jsonwebtoken": "^8.5.1",

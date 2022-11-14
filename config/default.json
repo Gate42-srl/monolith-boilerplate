@@ -3,7 +3,7 @@
   "JWT_SECRET": "secretprova",
   "REFRESH_SECRET": "refreshprova",
   "MODE": "development",
-  "DATABASE": "mongodb",
+  "DATABASE": "postgresql",
   "DATABASE_URI": "mongodb://localhost:27017/voice-office-tests",
   "POSTGRES_SETTINGS": {
     "user": "postgres",

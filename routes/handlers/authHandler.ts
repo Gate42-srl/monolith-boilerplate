@@ -9,7 +9,7 @@ import {
   GetRefreshTokenFromToken,
   GetRefreshTokenFromUserId,
 } from "../../controllers/authController"
-import { CreateUser, GetUserByEmail, UpdateUser } from "../../controllers/userController"
+import { CreateUser, GetUserByEmail, GetUserById, UpdateUser } from "../../controllers/userController"
 
 import { encrypter } from "../../utils"
 
@@ -128,6 +128,22 @@ export function authHandler(fastify: any, opts: any, done: any) {
       await CreateRefreshToken({ token: newRefreshToken, userId: user._id })
 
       return res.status(200).send({ newToken, newRefreshToken })
+    }
+  )
+
+  fastify.get(
+    "/user",
+    {
+      preValidation: [fastify.authenticate],
+    },
+    async (req: any, res: any) => {
+      // Calls database function to retrieve the user from its id
+      const user = await GetUserById(req.user._id)
+
+      // Checks if the user was found
+      if (!user) res.status(404).send("User not found")
+
+      return res.status(200).send(user)
     }
   )
 
