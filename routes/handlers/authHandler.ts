@@ -1,4 +1,4 @@
-import { refreshToken } from "../../types"
+import { refreshToken, userClaims } from "../../types"
 
 import { validateBody } from "../../middlewares/requestValidator"
 import { validateAddUserSchema, validateLoginSchema } from "../../validation"
@@ -12,6 +12,7 @@ import {
 import { CreateUser, GetUserByEmail, GetUserById, UpdateUser } from "../../controllers/userController"
 
 import { encrypter } from "../../utils"
+import { isExpired } from "../../utils/token"
 
 // This handler is responsable for operations about authentication of users
 export function authHandler(fastify: any, opts: any, done: any) {
@@ -38,12 +39,30 @@ export function authHandler(fastify: any, opts: any, done: any) {
       if (!req.body.role) req.body.role = "user"
 
       // Calls database function to create and save the user
-      const savedUser = await CreateUser(req.body)
+      const user = await CreateUser(req.body)
 
       // Checks if the user was created
-      if (!savedUser) return res.status(500).send("Error during user creation")
+      if (!user) return res.status(500).send("Error during user creation")
 
-      return res.status(200).send(savedUser)
+      const claims = { _id: user._id, email: user.email, role: user.role }
+
+      // Genereates access token
+      const token = await encrypter.generateJwt("access", claims as userClaims)
+      if (!token) res.code(500).send("Error during token creation")
+
+      // Calls database function to retrieve refresh token for the user if it already exists
+      let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id.toString())) as refreshToken)?.token
+
+      // If refresh token doesn't exist, generate it and save it on database
+      if (!refreshToken) {
+        refreshToken = (await encrypter.generateJwt("refresh", claims as userClaims)) as string
+        if (!refreshToken) res.code(500).send("Error during refresh token creation")
+
+        // Calls database function to store the refresh token into the database
+        await CreateRefreshToken({ token: refreshToken, userId: user._id })
+      }
+
+      return res.status(200).send({ user, token, refreshToken })
     }
   )
 
@@ -97,15 +116,19 @@ export function authHandler(fastify: any, opts: any, done: any) {
       preValidation: [fastify.authenticate],
     },
     async (req: any, res: any) => {
-      const refreshToken = req.headers.refresh
+      const { refresh, authorization } = req.headers
+
+      // Checks if access token is expired and so it is needed to refresh it
+      if (!(await isExpired("access", authorization)))
+        res.code(200).send({ token: authorization, refreshToken: refresh })
 
       // Checks if the refresh token is present
-      if (!refreshToken) res.code(401).send("Token not found")
+      if (!refresh) res.code(401).send("Token not found")
 
       // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
-      if (!(await GetRefreshTokenFromToken(refreshToken))) res.code(403).send("Invalid refresh token")
+      if (!(await GetRefreshTokenFromToken(refresh))) res.code(403).send("Invalid refresh token")
 
-      const { email } = await encrypter.decodeToken("refresh", refreshToken)
+      const { email } = await encrypter.decodeToken("refresh", refresh)
 
       // Calls database function to retrieve the user by its email
       const user = (await GetUserByEmail(email)) as any
@@ -114,20 +137,20 @@ export function authHandler(fastify: any, opts: any, done: any) {
       const claims = { _id: user._id, email: user.email, role: user.role }
 
       // Genereates new access and refresh tokens
-      const newToken = await encrypter.generateJwt("access", claims)
-      if (!newToken) res.code(500).send("Error during token creation")
+      const token = await encrypter.generateJwt("access", claims)
+      if (!token) res.code(500).send("Error during token creation")
 
-      const newRefreshToken = (await encrypter.generateJwt("refresh", claims)) as string
+      const refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
       if (!refreshToken) res.code(500).send("Error during refresh token creation")
 
       // Calls database function to delete previous refresh token
-      const tokenToDelete = await DeleteRefreshTokenFromToken(refreshToken)
+      const tokenToDelete = await DeleteRefreshTokenFromToken(refresh)
       if (!tokenToDelete) return res.status(500).send("Previous token not deleted")
 
       // Calls database function to store the refresh token into the database
-      await CreateRefreshToken({ token: newRefreshToken, userId: user._id })
+      await CreateRefreshToken({ token: refreshToken, userId: user._id })
 
-      return res.status(200).send({ newToken, newRefreshToken })
+      return res.status(200).send({ token, refreshToken })
     }
   )
 

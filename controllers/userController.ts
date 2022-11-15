@@ -1,4 +1,5 @@
 import config from "config"
+import mongoose from "mongoose"
 const database = (config.get("DATABASE") as string).toLowerCase()
 
 import { GetById, GetAll, Create, Update, Delete, pool } from "../databases/PostgreSQL"
@@ -68,7 +69,9 @@ export const GetUserByEmail = async (email: string) => {
 }
 
 export const CreateUser = async (userToAdd: User) => {
-  let user: User | null
+  type UserWithId = Partial<User> & { _id: mongoose.Types.ObjectId }
+
+  let user: UserWithId | null
 
   switch (database) {
     case "mongodb":

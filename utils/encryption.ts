@@ -3,6 +3,7 @@ import config from "config"
 import jwt from "jsonwebtoken"
 import { AuthPayload, RefreshUserPayload, UserPayload, userClaims } from "../types"
 
+// const expire: Date = new Date(new Date().getTime() - 1000) // GENERATES AND EXPIRED TOKEN FOR TESTING
 const expire: Date = new Date(new Date().getTime() + 240 * 60000)
 const refreshExpire: Date = new Date(expire.getTime() * 6)
 

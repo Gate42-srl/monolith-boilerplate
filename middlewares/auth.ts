@@ -1,12 +1,12 @@
-import { GetUserById } from "../controllers/userController"
-import { User, UserPayload } from "../types"
+import { RefreshUserPayload, UserPayload } from "../types"
 import { encrypter } from "../utils"
+import { getLoggedUser, isExpired } from "../utils/token"
 
 // Middleware that authorize the user
 export default async (req: any, res: any) => {
-  const { authorization } = req.headers
+  const { authorization, refresh } = req.headers
 
-  if (!authorization) return res.code(401).send("Missing Token")
+  if (!authorization || !refresh) return res.code(401).send("Missing Token")
 
   try {
     // Verify the JWT
@@ -14,6 +14,10 @@ export default async (req: any, res: any) => {
 
     // Check if the payload exists
     if (!decoded) return res.code(401).send("Invalid token")
+
+    // Checks if both access and refresh token are expired and if both are is it return an authorization error
+    if ((await isExpired("refresh", refresh)) && (await isExpired("access", authorization)))
+      return res.code(401).send("Token expired")
 
     // Check if the user exists
     const user = await getLoggedUser(decoded)
@@ -28,27 +32,5 @@ export default async (req: any, res: any) => {
     // Probably another unknown kind of error, log it and return a different error
     console.error(error.name)
     return res.code(401).send("Unable to parse token")
-  }
-}
-
-/**
- * @function getLoggedUser
- * @description Utility function retrieve the user from a jwt token
- * @param {string | object} jwtPayload The payload from which you want to retrieve the user
- * @return The logged user
- */
-const getLoggedUser = async (jwtPayload: UserPayload) => {
-  const { _id, role } = jwtPayload
-
-  switch (role) {
-    case "admin":
-    case "user":
-      // Calls database function to retrieve the user by its id
-      const user = (await GetUserById(_id)) as User
-
-      if (user.role == role) return user
-      else return null
-    default:
-      return null
   }
 }

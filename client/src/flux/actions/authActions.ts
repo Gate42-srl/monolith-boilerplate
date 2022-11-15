@@ -9,6 +9,7 @@ import {
   LOGOUT_SUCCESS,
   REGISTER_SUCCESS,
   REGISTER_FAIL,
+  REFRESH_SUCCESS,
 } from "./types"
 import { IAuthFunction, IConfigHeaders } from "../../types/interfaces"
 
@@ -22,6 +23,24 @@ export const loadUser = () => async (dispatch: Function, getState: Function) => 
     .then((res) =>
       dispatch({
         type: USER_LOADED,
+        payload: res.data,
+      })
+    )
+    .catch((err) => {
+      dispatch(returnErrors(err.response.data, err.response.status))
+      dispatch({
+        type: AUTH_ERROR,
+      })
+    })
+}
+
+// Refresh token if it is expired
+export const refreshToken = () => async (dispatch: Function, getState: Function) => {
+  axios
+    .post("http://localhost:5000/auth/token", {}, tokenConfig(getState))
+    .then((res) =>
+      dispatch({
+        type: REFRESH_SUCCESS,
         payload: res.data,
       })
     )
@@ -104,6 +123,7 @@ export const logout = () => {
 export const tokenConfig = (getState: Function) => {
   // Get token from localstorage
   const token = getState().auth.token
+  const refreshToken = getState().auth.refreshToken
 
   // Headers
   const config: IConfigHeaders = {
@@ -113,8 +133,9 @@ export const tokenConfig = (getState: Function) => {
   }
 
   // If token, add to headers
-  if (token) {
+  if (token && refreshToken) {
     config.headers.authorization = token
+    config.headers.refresh = refreshToken
   }
 
   return config
