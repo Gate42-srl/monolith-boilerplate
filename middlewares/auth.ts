@@ -1,6 +1,6 @@
-import { RefreshUserPayload, UserPayload } from "../types"
-import { encrypter } from "../utils"
-import { getLoggedUser, isExpired } from "../utils/token"
+import { DeleteRefreshTokenFromToken } from "../controllers/authController"
+import { UserPayload } from "../types"
+import { encrypter, getLoggedUser, isExpired } from "../utils"
 
 // Middleware that authorize the user
 export default async (req: any, res: any) => {
@@ -15,9 +15,14 @@ export default async (req: any, res: any) => {
     // Check if the payload exists
     if (!decoded) return res.code(401).send("Invalid token")
 
-    // Checks if both access and refresh token are expired and if both are is it return an authorization error
-    if ((await isExpired("refresh", refresh)) && (await isExpired("access", authorization)))
+    // Checks if both access and refresh token are expired
+    if ((await isExpired("refresh", refresh)) && (await isExpired("access", authorization))) {
+      // Calls database function to delete expired refresh token
+      await DeleteRefreshTokenFromToken(refresh)
+
+      // If both are expired return an authorization error
       return res.code(401).send("Token expired")
+    }
 
     // Check if the user exists
     const user = await getLoggedUser(decoded)
