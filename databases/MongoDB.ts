@@ -32,13 +32,13 @@ mongoose.connection.on("disconnected", function () {
  * @description Utility function that estabilish a connection to to the database
  */
 export const connectToMongoDB = async () => {
-  const connection = await mongoose.connect(config.get("DATABASE_URI")!).catch(console.error)
+  const connection = await mongoose.connect(config.get("DATABASE_URI")!)
 
   // Don't init db and don't log on test environment
   if (config.get("MODE") == "test") return connection
 
   // Check for init
-  dbCheck()
+  await dbCheck()
 
   console.log("MongoDB connected...", moment().format())
   // Logs on winston
