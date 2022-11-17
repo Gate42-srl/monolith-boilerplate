@@ -59,7 +59,7 @@ export interface IConfigHeaders {
 export interface IAppNavbar {
   auth?: {
     isAuthenticated: boolean
-    user: IUser
+    user: Partial<IUser> & { _id: string }
   }
 }
 

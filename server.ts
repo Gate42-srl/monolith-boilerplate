@@ -5,6 +5,7 @@ import fastify from "fastify"
 import jwt from "fastify-jwt"
 import fastifyCORS from "fastify-cors"
 import fastifyExpress from "fastify-express"
+import fastifyWebSocket from "fastify-websocket"
 
 const logger: boolean = config.get("LOGGER")
 
@@ -19,6 +20,9 @@ app.register(jwt, {
 app.register(fastifyCORS, {
   origin: true,
 })
+
+// Register fastify websocket
+app.register(fastifyWebSocket, { options: { clientTracking: true } })
 
 // Register all our routes
 app.register(routes)

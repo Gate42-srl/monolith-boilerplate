@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { Collapse, Navbar, NavbarToggler, NavbarBrand, Nav, NavItem, Container } from "reactstrap"
 import { connect } from "react-redux"
 import RegisterModal from "./auth/RegisterModal"
@@ -6,7 +6,26 @@ import LoginModal from "./auth/LoginModal"
 import Logout from "./auth/Logout"
 import { IAppNavbar, IAuthReduxProps } from "../types/interfaces"
 
+import { w3cwebsocket as W3CWebSocket } from "websocket"
+
 const AppNavbar = ({ auth }: IAppNavbar) => {
+  useEffect(() => {
+    const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
+
+    if (auth && auth.isAuthenticated) {
+      client.onopen = () => {
+        console.log(`WebSocket Client Connected`)
+
+        if (auth.user) client.send(JSON.stringify({ userId: auth.user._id }))
+        else client.send(JSON.stringify({}))
+      }
+
+      client.onmessage = (message: any) => {
+        console.log("got reply! ", JSON.parse(message.data))
+      }
+    }
+  }, [auth])
+
   const [isOpen, setIsOpen] = useState(false)
 
   const handleToggle = () => setIsOpen(!isOpen)

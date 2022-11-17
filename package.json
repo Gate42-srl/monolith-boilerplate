@@ -55,6 +55,7 @@
     "fastify-cors": "^3.0.3",
     "fastify-express": "^0.2.0",
     "fastify-jwt": "^2.3.0",
+    "fastify-websocket": "^4.0.0",
     "jsonwebtoken": "^8.5.1",
     "mocha": "^10.1.0",
     "moment": "^2.29.4",

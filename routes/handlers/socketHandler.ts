@@ -14,7 +14,7 @@ export function socketHandler(fastify: any, opts: any, done: any) {
   fastify.get("/", { websocket: true }, (connection: any, req: any) => {
     // Handle new messages from the client
     connection.socket.on("message", (msg: string) => {
-      // Retrieve the userId and structureId from the message payload
+      // Retrieve the userId from the message payload
       const { userId } = JSON.parse(msg)
 
       // Generate a unique id for the client
@@ -60,6 +60,33 @@ export function socketHandler(fastify: any, opts: any, done: any) {
     return clients.map((client) => client.id)
   })
 
+  // Utility endpoint that simulate the notification sended by the action to the dashboard
+  fastify.post("/sandbox", { preValidation: [fastify.authenticate] }, async (req: any, res: any) => {
+    // Retrieve the logged user
+    const loggedUser = req.user
+
+    // Check if the user is not an admin
+    if (loggedUser.role.toLowerCase() !== "admin") return res.code(401).send("Not authorized")
+
+    const { eventType, userId, message } = req.body
+
+    const idPrefix = userId === undefined ? `${DEFAULT_USER_VALUE}:.*` : `${userId}:.*`
+
+    // Try to get the client
+    const client = clients.find(({ id }) => id.match(idPrefix))
+    if (!client) return res.code(400).send("Cannot find a client connected with the specified id")
+
+    let notification: { event: string; data: string } = { event: "", data: "" }
+    switch (eventType) {
+      case "test":
+        notification = { event: eventType, data: message }
+    }
+
+    notify(userId, JSON.stringify(notification))
+
+    return res.code(200).send(notification)
+  })
+
   done()
 }
 
@@ -98,15 +125,13 @@ const removeClient = (clientId: string) => {
  * @param {String} userId the id ot the user that had to receive the message
  * @param {Object} message the message that we want to send to the client
  */
-function notify(userId: string, message: string) {
-  let clientsTosend: any[] = []
+function notify(userId: string, message: any) {
+  let clientsTosend: { id: string; connection: any }[] = []
 
-  // Create an unique id for the client composed by the userId and a random string
   const idPrefix = userId === undefined ? `${DEFAULT_USER_VALUE}:.*` : `${userId}:.*`
 
   if (clients.length > 0)
     clients.forEach((client) => {
-      //adds the user and the front officer of the specific structure involved in the event to the list of clients to send a message to
       if (client.id.match(idPrefix)) clientsTosend.push(client)
     })
 
