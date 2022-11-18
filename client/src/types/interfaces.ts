@@ -55,6 +55,13 @@ export interface IConfigHeaders {
   }
 }
 
+export interface INotification {
+  auth?: {
+    isAuthenticated: boolean
+    user: Partial<IUser> & { _id: string }
+  }
+}
+
 // NAVBAR
 export interface IAppNavbar {
   auth?: {

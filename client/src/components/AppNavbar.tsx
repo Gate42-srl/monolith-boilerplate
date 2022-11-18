@@ -1,18 +1,20 @@
 import React, { Fragment, useEffect, useState } from "react"
 import { Collapse, Navbar, NavbarToggler, NavbarBrand, Nav, NavItem, Container } from "reactstrap"
 import { connect } from "react-redux"
+import { IAppNavbar, IAuthReduxProps } from "../types/interfaces"
+
 import RegisterModal from "./auth/RegisterModal"
 import LoginModal from "./auth/LoginModal"
 import Logout from "./auth/Logout"
-import { IAppNavbar, IAuthReduxProps } from "../types/interfaces"
+import NotificationModal from "./NotificationModal"
 
-import { w3cwebsocket as W3CWebSocket } from "websocket"
+// import { w3cwebsocket as W3CWebSocket } from "websocket"
 
 const AppNavbar = ({ auth }: IAppNavbar) => {
-  useEffect(() => {
-    const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
-
+  /*useEffect(() => {
     if (auth && auth.isAuthenticated) {
+      const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
+
       client.onopen = () => {
         console.log(`WebSocket Client Connected`)
 
@@ -21,10 +23,16 @@ const AppNavbar = ({ auth }: IAppNavbar) => {
       }
 
       client.onmessage = (message: any) => {
-        console.log("got reply! ", JSON.parse(message.data))
+        switch (message.data.type) {
+          case "test":
+            console.log("got reply! ", JSON.parse(message.data))
+            break
+          default:
+            console.log(JSON.parse(message.data))
+        }
       }
     }
-  }, [auth])
+  }, [auth])*/
 
   const [isOpen, setIsOpen] = useState(false)
 
@@ -39,6 +47,9 @@ const AppNavbar = ({ auth }: IAppNavbar) => {
       </NavItem>
       <NavItem>
         <Logout />
+      </NavItem>
+      <NavItem>
+        <NotificationModal />
       </NavItem>
     </Fragment>
   )

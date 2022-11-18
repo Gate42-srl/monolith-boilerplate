@@ -76,10 +76,10 @@ export function socketHandler(fastify: any, opts: any, done: any) {
     const client = clients.find(({ id }) => id.match(idPrefix))
     if (!client) return res.code(400).send("Cannot find a client connected with the specified id")
 
-    let notification: { event: string; data: string } = { event: "", data: "" }
+    let notification: { type: string; data: string } = { type: "", data: "" }
     switch (eventType) {
       case "test":
-        notification = { event: eventType, data: message }
+        notification = { type: eventType, data: message }
     }
 
     notify(userId, JSON.stringify(notification))
