@@ -16,7 +16,7 @@ export default async (req: any, res: any) => {
     if (!decoded) return res.code(401).send("Invalid token")
 
     // Checks if both access and refresh token are expired
-    if ((await isExpired("refresh", refresh)) && (await isExpired("access", authorization))) {
+    if ((await isExpired("access", authorization)) && (await isExpired("refresh", refresh))) {
       // Calls database function to delete expired refresh token
       await DeleteRefreshTokenFromToken(refresh)
 
