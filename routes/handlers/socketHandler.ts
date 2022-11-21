@@ -1,3 +1,5 @@
+import { DoneFuncWithErrOrRes } from "fastify"
+
 let clients: { id: string; connection: any }[] = []
 let queueMessages: { userId: string; message: string }[] = []
 
@@ -7,87 +9,93 @@ const PING_TIMEOUT = 25000
 const DEFAULT_USER_VALUE = "0000"
 
 // This handler is responsable for operations about websocket
-export function socketHandler(fastify: any, opts: any, done: any) {
+export function socketHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes) {
   // Send a ping message to the client every PING_TIMEOUT milliseconds
   setInterval(pingClients, PING_TIMEOUT)
 
-  fastify.get("/", { websocket: true }, (connection: any, req: any) => {
-    // Handle new messages from the client
-    connection.socket.on("message", (msg: string) => {
-      // Retrieve the userId from the message payload
-      const { userId } = JSON.parse(msg)
+  fastify.get("/", { websocket: true }, socketConnectionHandler)
 
-      // Generate a unique id for the client
-      const clientUniqueId = Math.random().toString(36).substring(2, 11)
-
-      // Create an unique id for the client composed by the userId and a random string
-      const clientId = userId === undefined ? `${DEFAULT_USER_VALUE}:${clientUniqueId}` : `${userId}:${clientUniqueId}`
-
-      // Store the client unique id in the connection
-      connection.socket.id = clientId
-
-      // Add the client to the clients list
-      clients.push({ id: clientId, connection })
-
-      // Check if there are pending messages for the user in the message queue
-      let messages = queueMessagesCheck(userId)
-
-      if (messages)
-        messages.forEach((message) => {
-          connection.socket.send(message)
-          queueMessages = queueMessages.filter((messageToRemove) => messageToRemove.message !== message)
-        })
-    })
-
-    // Handle pong event
-    connection.socket.on("pong", () => {
-      // Mark the socket as alive when we receive a pong
-      connection.socket.isAlive = true
-    })
-
-    // Handle socket disconnection
-    connection.socket.on("close", () => {
-      // Retrieve the client unique id from the connection
-      const clientId = connection.socket.id
-
-      // Remove the client from the clients list
-      removeClient(clientId)
-    })
-  })
-
-  fastify.get("/clients", () => {
-    // Return the clients list
-    return clients.map((client) => client.id)
-  })
+  fastify.get("/clients", allClientsHandler)
 
   // Utility endpoint that simulate the notification sended by the action to the dashboard
-  fastify.post("/sandbox", { preValidation: [fastify.authenticate] }, async (req: any, res: any) => {
-    // Retrieve the logged user
-    const loggedUser = req.user
-
-    // Check if the user is not an admin
-    if (loggedUser.role.toLowerCase() !== "admin") return res.code(401).send("Not authorized")
-
-    const { eventType, userId, message } = req.body
-
-    const idPrefix = userId === undefined ? `${DEFAULT_USER_VALUE}:.*` : `${userId}:.*`
-
-    // Try to get the client
-    const client = clients.find(({ id }) => id.match(idPrefix))
-    if (!client) return res.code(400).send("Cannot find a client connected with the specified id")
-
-    let notification: { type: string; data: string } = { type: "", data: "" }
-    switch (eventType) {
-      case "test":
-        notification = { type: eventType, data: message }
-    }
-
-    notify(userId, JSON.stringify(notification))
-
-    return res.code(200).send(notification)
-  })
+  fastify.post("/sandbox", { preValidation: [fastify.authenticate] }, sandboxHandler)
 
   done()
+}
+
+export const socketConnectionHandler = (connection: any, req: any) => {
+  // Handle new messages from the client
+  connection.socket.on("message", (msg: string) => {
+    // Retrieve the userId from the message payload
+    const { userId } = JSON.parse(msg)
+
+    // Generate a unique id for the client
+    const clientUniqueId = Math.random().toString(36).substring(2, 11)
+
+    // Create an unique id for the client composed by the userId and a random string
+    const clientId = userId === undefined ? `${DEFAULT_USER_VALUE}:${clientUniqueId}` : `${userId}:${clientUniqueId}`
+
+    // Store the client unique id in the connection
+    connection.socket.id = clientId
+
+    // Add the client to the clients list
+    clients.push({ id: clientId, connection })
+
+    // Check if there are pending messages for the user in the message queue
+    let messages = queueMessagesCheck(userId)
+
+    if (messages)
+      messages.forEach((message) => {
+        connection.socket.send(message)
+        queueMessages = queueMessages.filter((messageToRemove) => messageToRemove.message !== message)
+      })
+  })
+
+  // Handle pong event
+  connection.socket.on("pong", () => {
+    // Mark the socket as alive when we receive a pong
+    connection.socket.isAlive = true
+  })
+
+  // Handle socket disconnection
+  connection.socket.on("close", () => {
+    // Retrieve the client unique id from the connection
+    const clientId = connection.socket.id
+
+    // Remove the client from the clients list
+    removeClient(clientId)
+  })
+}
+
+export const allClientsHandler = () => {
+  // Return the clients list
+  return clients.map((client) => client.id)
+}
+
+export const sandboxHandler = async (req: any, res: any) => {
+  // Retrieve the logged user
+  const loggedUser = req.user
+
+  // Check if the user is not an admin
+  if (loggedUser.role.toLowerCase() !== "admin") return res.code(401).send("Not authorized")
+
+  const { eventType, userId, message } = req.body
+
+  const idPrefix = userId === undefined ? `${DEFAULT_USER_VALUE}:.*` : `${userId}:.*`
+
+  // Try to get the client
+  const client = clients.find(({ id }) => id.match(idPrefix))
+  if (!client) return res.code(400).send("Cannot find a client connected with the specified id")
+
+  let notification: { type: string; data: string } = { type: "", data: "" }
+  switch (eventType) {
+    case "test":
+      notification = { type: eventType, data: message }
+  }
+
+  notify(userId, JSON.stringify(notification))
+
+  return res.code(200).send(notification)
 }
 
 /**

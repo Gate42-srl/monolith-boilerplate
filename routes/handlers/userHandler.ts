@@ -15,10 +15,12 @@ import {
   GetUserById,
   UpdateUser,
 } from "../../controllers/userController"
+
 import { User } from "../../types"
+import { DoneFuncWithErrOrRes } from "fastify"
 
 // This handler is responsable for operations on users
-export function userHandler(fastify: any, opts: any, done: any) {
+export function userHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes) {
   fastify.decorate("authorize", async (request: any, res: any) => {
     const loggedUser = request.user
 
@@ -66,15 +68,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
     {
       preValidation: [fastify.authenticate, fastify.authorize],
     },
-    async (req: any, res: any) => {
-      // Calls database function to retrieve the user from its id
-      const users = (await GetAllUsers()) as User[]
-
-      // Checks if the user was found
-      if (users.length <= 0) res.status(404).send("No user into the database")
-
-      return res.status(200).send(users)
-    }
+    allUsersHandler
   )
 
   fastify.get(
@@ -82,17 +76,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
     {
       preValidation: [fastify.authenticate, fastify.authorize, fastify.idValidatorParams],
     },
-    async (req: any, res: any) => {
-      const id = req.params.id
-
-      // Calls database function to retrieve the user from its id
-      const user = await GetUserById(id)
-
-      // Checks if the user was found
-      if (!user) res.status(404).send("User not found")
-
-      return res.status(200).send(user)
-    }
+    userByIdHandler
   )
 
   fastify.post(
@@ -100,20 +84,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
     {
       preValidation: [fastify.authenticate, fastify.authorize, fastify.validateAddUserBody],
     },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
-
-      // Calls database function to check if a user with given email already exists
-      if (await GetUserByEmail(email)) return res.code(400).send("Email already used")
-
-      // Calls database function that creates the user and saves it into the database
-      const savedUser = await CreateUser(req.body)
-
-      // Checks if the user was created
-      if (!savedUser) return res.status(500).send("Error during user creation")
-
-      return res.status(200).send(savedUser)
-    }
+    createUserHandler
   )
 
   fastify.put(
@@ -127,19 +98,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
         fastify.fieldNotToUpdate,
       ],
     },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
-
-      // Calls database function to check if a user with given email already exists
-      if (email && (await GetUserByEmail(email))) return res.code(400).send("Email already used")
-
-      // Calls database function that updates specified user
-      const updatedUser = await UpdateUser(req.body, req.params.id)
-
-      if (!updatedUser) return res.code(404).send("User not found")
-
-      return res.status(200).send(updatedUser)
-    }
+    updateUserHandler
   )
 
   fastify.patch(
@@ -153,19 +112,7 @@ export function userHandler(fastify: any, opts: any, done: any) {
         fastify.fieldNotToUpdate,
       ],
     },
-    async (req: any, res: any) => {
-      const { email } = req.body as User
-
-      // Calls database function to check if a user with given email already exists
-      if (email && (await GetUserByEmail(email))) return res.code(400).send("Email already used")
-
-      // Calls database function that updates specified user
-      const updatedUser = await UpdateUser(req.body, req.params.id)
-
-      if (!updatedUser) return res.code(404).send("User not found")
-
-      return res.status(200).send(updatedUser)
-    }
+    updateUserHandler
   )
 
   fastify.delete(
@@ -173,17 +120,70 @@ export function userHandler(fastify: any, opts: any, done: any) {
     {
       preValidation: [fastify.authenticate, fastify.authorize, fastify.idValidatorParams],
     },
-    async (req: any, res: any) => {
-      const id = req.params.id
-
-      // Calls database function that removes specified user
-      const deletedUser = await DeleteUser(id)
-
-      if (!deletedUser) return res.code(404).send("User not found")
-
-      return res.status(200).send(deletedUser)
-    }
+    deleteUserHandler
   )
 
   done()
+}
+
+export const allUsersHandler = async (req: any, res: any) => {
+  // Calls database function to retrieve the user from its id
+  const users = (await GetAllUsers()) as User[]
+
+  // Checks if the user was found
+  if (users.length <= 0) res.status(404).send("No user into the database")
+
+  return res.status(200).send(users)
+}
+
+export const userByIdHandler = async (req: any, res: any) => {
+  const id = req.params.id
+
+  // Calls database function to retrieve the user from its id
+  const user = await GetUserById(id)
+
+  // Checks if the user was found
+  if (!user) res.status(404).send("User not found")
+
+  return res.status(200).send(user)
+}
+
+export const createUserHandler = async (req: any, res: any) => {
+  const { email } = req.body as User
+
+  // Calls database function to check if a user with given email already exists
+  if (await GetUserByEmail(email)) return res.code(400).send("Email already used")
+
+  // Calls database function that creates the user and saves it into the database
+  const savedUser = await CreateUser(req.body)
+
+  // Checks if the user was created
+  if (!savedUser) return res.status(500).send("Error during user creation")
+
+  return res.status(200).send(savedUser)
+}
+
+export const updateUserHandler = async (req: any, res: any) => {
+  const { email } = req.body as User
+
+  // Calls database function to check if a user with given email already exists
+  if (email && (await GetUserByEmail(email))) return res.code(400).send("Email already used")
+
+  // Calls database function that updates specified user
+  const updatedUser = await UpdateUser(req.body, req.params.id)
+
+  if (!updatedUser) return res.code(404).send("User not found")
+
+  return res.status(200).send(updatedUser)
+}
+
+export const deleteUserHandler = async (req: any, res: any) => {
+  const id = req.params.id
+
+  // Calls database function that removes specified user
+  const deletedUser = await DeleteUser(id)
+
+  if (!deletedUser) return res.code(404).send("User not found")
+
+  return res.status(200).send(deletedUser)
 }

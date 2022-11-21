@@ -35,5 +35,5 @@ export const errorHandler = (error: any, request: any, res: any) => {
   }
 
   // Send the message to the client
-  res.status(errorBody.statusCode).send(errorBody)
+  return res.code(errorBody.statusCode).send(errorBody)
 }

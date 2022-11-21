@@ -7,7 +7,7 @@ export const validateRequest = (field: "body" | "params" | "query" | "headers", 
 
     if (!isValid) {
       const message = buildErrorMessage(field, validate.errors as DefinedError[])
-      return res.status(400).send(message)
+      return res.code(400).send(message)
     }
   }
 }
