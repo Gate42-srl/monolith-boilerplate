@@ -32,7 +32,7 @@ const getFakeRefreshToken = () => {
   }
 }
 
-describe.skip("Auth controller tests", () => {
+describe("Auth controller tests", () => {
   describe("Test GetRefreshTokenFromUserId", () => {
     const refreshToken = getFakeRefreshToken()
 

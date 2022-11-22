@@ -10,7 +10,7 @@ import * as dbCheck from "../../databases/dbCheck"
 import { connectToMongoDB } from "../../databases/MongoDB"
 import mongoose from "mongoose"
 
-describe.skip("MongoDB database connection test", () => {
+describe("MongoDB database connection test", () => {
   describe("When mongoose connect fails", () => {
     before(() => {
       sinon.stub(mongoose, "connect").rejects()

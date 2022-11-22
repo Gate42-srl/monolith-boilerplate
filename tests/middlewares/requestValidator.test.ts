@@ -10,7 +10,7 @@ import { validateRequest } from "../../middlewares/requestValidator"
 import * as requestValidators from "../../validation/RequestValidators"
 import * as testUtils from "../utils"
 
-describe.skip("request validator middleware test", () => {
+describe("request validator middleware test", () => {
   let mockedRequest: any
   let mockedResponse: any
 

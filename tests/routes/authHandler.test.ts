@@ -21,7 +21,6 @@ import { faker } from "@faker-js/faker"
 import { getMockedRequest, getMockedResponse } from "../utils"
 import { encrypter } from "../../utils"
 import * as token from "../../utils/token"
-import auth from "../../middlewares/auth"
 
 const getFakeUsers = (amount: number) => {
   let users: any[] = []
@@ -55,7 +54,7 @@ const getFakeRefreshToken = () => {
   }
 }
 
-describe.skip("Auth handler tests", () => {
+describe("Auth handler tests", () => {
   describe("Sign up handler test", () => {
     let mockedRequest: any
     let mockedResponse: any

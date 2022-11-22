@@ -60,7 +60,7 @@ const getFakeRefreshToken = () => {
   }
 }
 
-describe.skip("auth middleware test", () => {
+describe("auth middleware test", () => {
   let mockedRequest: any
   let mockedResponse: any
 

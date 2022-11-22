@@ -31,7 +31,7 @@ const getFakeUsers = (amount: number) => {
   return users
 }
 
-describe.skip("db check test", () => {
+describe("db check test", () => {
   describe("When getAllUsers fails", () => {
     before(() => {
       sinon.stub(userController, "GetAllUsers").rejects()

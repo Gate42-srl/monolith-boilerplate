@@ -9,7 +9,7 @@ chai.use(chaiAsPromised)
 import { errorHandler } from "../../middlewares/errors"
 import { getMockedRequest, getMockedResponse } from "../utils"
 
-describe.skip("errors middleware test", () => {
+describe("errors middleware test", () => {
   let mockedRequest: any
   let mockedResponse: any
 

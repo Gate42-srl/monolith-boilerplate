@@ -39,7 +39,7 @@ const getFakeUsers = (amount: number) => {
   return users
 }
 
-describe.skip("User controller tests", () => {
+describe("User controller tests", () => {
   describe("Test GetUserById", () => {
     const user = getFakeUsers(1)[0]
 

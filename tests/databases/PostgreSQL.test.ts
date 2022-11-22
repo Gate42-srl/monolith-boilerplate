@@ -10,7 +10,7 @@ import * as dbCheck from "../../databases/dbCheck"
 import * as PostgreSQL from "../../databases/PostgreSQL"
 import mongoose from "mongoose"
 
-describe.skip("PostgreSQL database tests", () => {
+describe("PostgreSQL database tests", () => {
   describe("ConnectToPostgreSQL test", () => {
     describe("When dbCheck fails", () => {
       before(() => {

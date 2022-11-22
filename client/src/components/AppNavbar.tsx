@@ -8,32 +8,7 @@ import LoginModal from "./auth/LoginModal"
 import Logout from "./auth/Logout"
 import NotificationModal from "./NotificationModal"
 
-// import { w3cwebsocket as W3CWebSocket } from "websocket"
-
 const AppNavbar = ({ auth }: IAppNavbar) => {
-  /*useEffect(() => {
-    if (auth && auth.isAuthenticated) {
-      const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
-
-      client.onopen = () => {
-        console.log(`WebSocket Client Connected`)
-
-        if (auth.user) client.send(JSON.stringify({ userId: auth.user._id }))
-        else client.send(JSON.stringify({}))
-      }
-
-      client.onmessage = (message: any) => {
-        switch (message.data.type) {
-          case "test":
-            console.log("got reply! ", JSON.parse(message.data))
-            break
-          default:
-            console.log(JSON.parse(message.data))
-        }
-      }
-    }
-  }, [auth])*/
-
   const [isOpen, setIsOpen] = useState(false)
 
   const handleToggle = () => setIsOpen(!isOpen)

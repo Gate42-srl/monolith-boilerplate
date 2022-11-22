@@ -1,6 +1,6 @@
 import { DoneFuncWithErrOrRes } from "fastify"
 
-let clients: { id: string; connection: any }[] = []
+export let clients: { id: string; connection: any }[] = []
 let queueMessages: { userId: string; message: string }[] = []
 
 // The amount of time to wait before pinging the clients again
@@ -22,6 +22,8 @@ export function socketHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRe
 
   done()
 }
+
+// HANDLERS
 
 export const socketConnectionHandler = (connection: any, req: any) => {
   // Handle new messages from the client
@@ -72,7 +74,7 @@ export const allClientsHandler = () => {
   return clients.map((client) => client.id)
 }
 
-export const sandboxHandler = async (req: any, res: any) => {
+export const sandboxHandler = (req: any, res: any) => {
   // Retrieve the logged user
   const loggedUser = req.user
 
@@ -97,6 +99,8 @@ export const sandboxHandler = async (req: any, res: any) => {
 
   return res.code(200).send(notification)
 }
+
+// WEBSOCKET FUNCTIONS
 
 /**
  * @function pingClients
@@ -133,7 +137,7 @@ const removeClient = (clientId: string) => {
  * @param {String} userId the id ot the user that had to receive the message
  * @param {Object} message the message that we want to send to the client
  */
-function notify(userId: string, message: any) {
+export function notify(userId: string, message: any) {
   let clientsTosend: { id: string; connection: any }[] = []
 
   const idPrefix = userId === undefined ? `${DEFAULT_USER_VALUE}:.*` : `${userId}:.*`

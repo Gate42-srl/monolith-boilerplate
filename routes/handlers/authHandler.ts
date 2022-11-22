@@ -131,7 +131,7 @@ export const loginHandler = async (req: any, res: any) => {
     await CreateRefreshToken({ token: refreshToken, userId: user._id })
   }
 
-  return res.code(200).send({ token, refreshToken })
+  return res.code(200).send({ user, token, refreshToken })
 }
 
 export const tokenRefreshHandler = async (req: any, res: any) => {

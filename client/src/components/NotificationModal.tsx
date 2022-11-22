@@ -16,7 +16,6 @@ const NotificationModal = ({ auth }: INotification) => {
         console.log(`WebSocket Client Connected`)
 
         if (auth.user) client.send(JSON.stringify({ userId: auth.user._id }))
-        else client.send(JSON.stringify({}))
       }
 
       client.onmessage = (message: any) => {

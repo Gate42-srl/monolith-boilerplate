@@ -133,7 +133,7 @@ export const allUsersHandler = async (req: any, res: any) => {
   // Checks if the user was found
   if (users.length <= 0) res.status(404).send("No user into the database")
 
-  return res.status(200).send(users)
+  return res.code(200).send(users)
 }
 
 export const userByIdHandler = async (req: any, res: any) => {
@@ -143,9 +143,9 @@ export const userByIdHandler = async (req: any, res: any) => {
   const user = await GetUserById(id)
 
   // Checks if the user was found
-  if (!user) res.status(404).send("User not found")
+  if (!user) res.code(404).send("User not found")
 
-  return res.status(200).send(user)
+  return res.code(200).send(user)
 }
 
 export const createUserHandler = async (req: any, res: any) => {
@@ -158,9 +158,9 @@ export const createUserHandler = async (req: any, res: any) => {
   const savedUser = await CreateUser(req.body)
 
   // Checks if the user was created
-  if (!savedUser) return res.status(500).send("Error during user creation")
+  if (!savedUser) return res.code(500).send("Error during user creation")
 
-  return res.status(200).send(savedUser)
+  return res.code(200).send(savedUser)
 }
 
 export const updateUserHandler = async (req: any, res: any) => {
@@ -174,7 +174,7 @@ export const updateUserHandler = async (req: any, res: any) => {
 
   if (!updatedUser) return res.code(404).send("User not found")
 
-  return res.status(200).send(updatedUser)
+  return res.code(200).send(updatedUser)
 }
 
 export const deleteUserHandler = async (req: any, res: any) => {
@@ -185,5 +185,5 @@ export const deleteUserHandler = async (req: any, res: any) => {
 
   if (!deletedUser) return res.code(404).send("User not found")
 
-  return res.status(200).send(deletedUser)
+  return res.code(200).send(deletedUser)
 }
