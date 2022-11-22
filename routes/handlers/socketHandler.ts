@@ -40,8 +40,15 @@ export const socketConnectionHandler = (connection: any, req: any) => {
     // Store the client unique id in the connection
     connection.socket.id = clientId
 
+    // Checks if the user is already connected to websocket
+    let isAlreadyConnected: boolean = false
+    if (clients.length > 0)
+      clients.forEach((client) => {
+        if (client.id.match(`${userId}:.*`)) isAlreadyConnected = true
+      })
+
     // Add the client to the clients list
-    clients.push({ id: clientId, connection })
+    if (!isAlreadyConnected) clients.push({ id: clientId, connection })
 
     // Check if there are pending messages for the user in the message queue
     let messages = queueMessagesCheck(userId)

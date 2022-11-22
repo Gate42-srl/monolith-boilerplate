@@ -13,8 +13,6 @@ const NotificationModal = ({ auth }: INotification) => {
       const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
 
       client.onopen = () => {
-        console.log(`WebSocket Client Connected`)
-
         if (auth.user) client.send(JSON.stringify({ userId: auth.user._id }))
       }
 
