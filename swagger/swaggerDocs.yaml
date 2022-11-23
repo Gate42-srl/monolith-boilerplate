@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "Voice Office boilerplate"
+  description: "Voice Office boilerplate API documentation."
   version: "1.0.0"
   title: "Voice-Office"
 
@@ -16,38 +16,424 @@ schemes:
   - "http"
   - "https"
 paths:
-  /:
+  /users:
     get:
       security:
         - ApiKeyAuth: []
+        - RefreshAuth: []
       tags:
         - "user"
-      summary: "TESTING api"
-      description: "API for testing"
-      operationId: "TEST"
+      summary: "Gets all users"
+      description: "Retrieves all users from given database."
+      operationId: "getAllUsers"
       produces:
         - "application/json"
       responses:
         "200":
           description: "Successful operation"
           schema:
-            $ref: "#/definitions/TestResponse"
+            $ref: "#/definitions/MoreUsersResponse"
+        "404":
+          description: "No user into the database"
+          schema:
+            type: "string"
+            default: "No user into the database"
         "500":
           description: "Failure operation"
           schema:
-            type: "object"
-            properties:
-              message:
-                type: "string"
+            type: "string"
+    post:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Create user"
+      description: "Create a user and add it to the database"
+      operationId: "createUser"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "user to add"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateUserRequest"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "Request has an invalid field"
+          schema:
+            type: "string"
+            default: "Email already used"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+            example: "Error during user creation"
+
+  /users/{id}:
+    get:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Get user by id"
+      description: "Retrieves given user by its id from the database."
+      operationId: "getUserByid"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "User Id."
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "path parameter contains an invalid Id"
+          schema:
+            type: "string"
+            default: "Invalid Id"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+    put:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Update user"
+      description: "Update given user found by its id."
+      operationId: "updateUser"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "User Id."
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Update for the user"
+          required: true
+          schema:
+            $ref: "#/definitions/UserSchema"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "path parameter contains an invalid Id"
+          schema:
+            type: "string"
+            default: "Invalid Id"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+    patch:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Patch user"
+      description: "Edit some field of given user found by its id."
+      operationId: "patchUser"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "User Id."
+          required: true
+          type: "string"
+        - in: "body"
+          name: "body"
+          description: "Update for the user"
+          required: true
+          schema:
+            $ref: "#/definitions/PatchUserRequest"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "path parameter contains an invalid Id"
+          schema:
+            type: "string"
+            default: "Invalid Id"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+    delete:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Delete user"
+      description: "Delete given user found by its id."
+      operationId: "deleteUser"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "User Id."
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "path parameter contains an invalid Id"
+          schema:
+            type: "string"
+            default: "Invalid Id"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /auth/signup:
+    post:
+      tags:
+        - "auth"
+      summary: "Registration"
+      description: "This api is used to handle registration of new users. It creates a new user, adds it to the database and returns it along with an access token and a refresh token, which is also saved on the database."
+      operationId: "signUp"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "user for registration"
+          required: true
+          schema:
+            $ref: "#/definitions/CreateUserRequest"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TokensUserResponse"
+        "400":
+          description: "Request has an invalid field"
+          schema:
+            type: "string"
+            default: "Email already used"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+            example: "Error during user creation"
+
+  /auth/login:
+    post:
+      tags:
+        - "auth"
+      summary: "Login"
+      description: "This api is used to handle login of users. It verifies if the given password matches the one of the user on the database found by its email. Then, it returns the user itself along with an access token and a refresh token, which is also saved on the database."
+      operationId: "login"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "email and password"
+          required: true
+          schema:
+            $ref: "#/definitions/LoginRequest"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TokensUserResponse"
+        "401":
+          description: "Password doesn't match so the user is unauthorized to login"
+          schema:
+            type: "string"
+            default: "Wrong password"
+        "404":
+          description: "Email not found"
+          schema:
+            type: "string"
+            default: "Email not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+            example: "Error during token creation"
+
+  /auth/token:
+    post:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "auth"
+      summary: "Token refresh"
+      description: "This api is used to handle token check to refresh a logged user session. It verifies if the access token is expired, if it isn't it keeps it or else generate a new one along with a new refresh token and retrun both of them."
+      operationId: "tokenRefresh"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TokensResponse"
+        "401":
+          description: "refresh token is not present into request header, so user is not authorized."
+          schema:
+            type: "string"
+            default: "Token not found"
+        "403":
+          description: "If refresh token is not into the database, it means is not valid. So user is forbidden to refresh it."
+          schema:
+            type: "string"
+            default: "Invalid refresh token"
+        "404":
+          description: "Email not found"
+          schema:
+            type: "string"
+            default: "Email not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+            example: "Error during token creation"
+
+  /auth/user:
+    get:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "auth"
+      summary: "Gets user into the token from request headers"
+      description: "This api is used to retrieve a user from the database by its id present into token in request headers. It's needed to retrieve the authenticated user for frontend side, on page refresh."
+      operationId: "getUserFromToken"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /requestSocket/clients:
+    get:
+      tags:
+        - "websocket"
+      summary: "Retrieves all clients connected to the websocket."
+      description: "Retrieves all clients connected to the websocket, used for testing purposes."
+      operationId: "getAllClients"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/ClientsResponse"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /requestSocket/sandbox:
+    post:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "websocket"
+      summary: "Builds a notification and sends it to the client with the specified user id."
+      description: "Buils a notification and sends it to the client with the specified user id, used for testing purposes."
+      operationId: "sandbox"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "notification data and user id"
+          required: true
+          schema:
+            $ref: "#/definitions/SandboxRequest"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/NotificationResponse"
+        "400":
+          description: "User id contained into request body doesn't match a client connected to the websocket"
+          schema:
+            type: "string"
+            default: "Cannot find a client connected with the specified id"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
 
 securityDefinitions:
   ApiKeyAuth:
     type: apiKey
     in: header
     name: Authorization
+  RefreshAuth:
+    type: apiKey
+    in: header
+    name: refresh
 
 security:
   - ApiKeyAuth: []
+  - RefreshAuth: []
 
 definitions:
   UserSchema:
@@ -58,6 +444,8 @@ definitions:
       email:
         type: "string"
         format: "email"
+      password:
+        type: "string"
       firstName:
         type: "string"
       lastName:
@@ -74,6 +462,91 @@ definitions:
         type: "string"
         format: "date-time"
 
-  TestResponse:
-    type: "string"
-    default: "TESTING"
+  CreateUserRequest:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        format: "email"
+      password:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+
+  LoginRequest:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        format: "email"
+      password:
+        type: "string"
+
+  PatchUserRequest:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        format: "email"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+
+  SandboxRequest:
+    type: "object"
+    properties:
+      userId:
+        type: "string"
+        example: "636b8c5a235be77a150baf1a"
+      eventType:
+        type: "string"
+        example: "test"
+      message:
+        type: "string"
+        example: "Hello"
+
+  MoreUsersResponse:
+    type: "array"
+    items:
+      $ref: "#/definitions/UserSchema"
+
+  TokensUserResponse:
+    type: "object"
+    properties:
+      user:
+        $ref: "#/definitions/UserSchema"
+      token:
+        type: "string"
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzZiOGM1YTIzNWJlNzdhMTUwYmFmMWEiLCJlbWFpbCI6InRhcmFsbG9naXVzZXBwZTk5QGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cGlyZSI6IjIwMjItMTEtMjNUMTU6NDk6MDMuMDI2WiIsImlhdCI6MTY2OTIwNDE1NH0.IVi5THReTJ5VUAOGxKnRuceM2kVqc0wzrHP-CR0AXGU"
+      refreshToken:
+        type: "string"
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRhcmFsbG9naXVzZXBwZTk5QGdtYWlsLmNvbSIsImV4cGlyZSI6IjIwMjItMTEtMjJUMjE6MjU6NDcuMzAyWiIsImlhdCI6MTY2OTA1MTYzN30.-DSyHgP9aUsHi01WsKwXvMChxwvC5I0PTGRS1kKabWY"
+
+  TokensResponse:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MzZiOGM1YTIzNWJlNzdhMTUwYmFmMWEiLCJlbWFpbCI6InRhcmFsbG9naXVzZXBwZTk5QGdtYWlsLmNvbSIsInJvbGUiOiJhZG1pbiIsImV4cGlyZSI6IjIwMjItMTEtMjNUMTU6NDk6MDMuMDI2WiIsImlhdCI6MTY2OTIwNDE1NH0.IVi5THReTJ5VUAOGxKnRuceM2kVqc0wzrHP-CR0AXGU"
+      refreshToken:
+        type: "string"
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRhcmFsbG9naXVzZXBwZTk5QGdtYWlsLmNvbSIsImV4cGlyZSI6IjIwMjItMTEtMjJUMjE6MjU6NDcuMzAyWiIsImlhdCI6MTY2OTA1MTYzN30.-DSyHgP9aUsHi01WsKwXvMChxwvC5I0PTGRS1kKabWY"
+
+  ClientsResponse:
+    type: "array"
+    items:
+      type: "string"
+      example: "636b8c5a235be77a150baf1a:qcybctqdy"
+
+  NotificationResponse:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        example: "test"
+      data:
+        type: "string"
+        example: "Hello"
