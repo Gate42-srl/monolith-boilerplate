@@ -4,13 +4,14 @@ import { INotification } from "../types/interfaces"
 
 import Notifications from "react-notifications-menu"
 import { w3cwebsocket as W3CWebSocket } from "websocket"
+import ConfigData from "../config/config.json"
 
 const data: any[] = []
 
 const NotificationModal = ({ auth }: INotification) => {
   useEffect(() => {
     if (auth && auth.isAuthenticated) {
-      const client = new W3CWebSocket("ws://localhost:5000/requestSocket")
+      const client = new W3CWebSocket(ConfigData.WEBSOCKET_ENDPOINT)
 
       client.onopen = () => {
         if (auth.user) client.send(JSON.stringify({ userId: auth.user._id }))

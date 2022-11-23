@@ -1,0 +1,79 @@
+swagger: "2.0"
+info:
+  description: "Voice Office boilerplate"
+  version: "1.0.0"
+  title: "Voice-Office"
+
+basePath: "/"
+tags:
+  - name: "user"
+    description: "Operations about user"
+  - name: "auth"
+    description: "Operations about authentication"
+  - name: "websocket"
+    description: "Operations about websocket"
+schemes:
+  - "http"
+  - "https"
+paths:
+  /:
+    get:
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - "user"
+      summary: "TESTING api"
+      description: "API for testing"
+      operationId: "TEST"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TestResponse"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: Authorization
+
+security:
+  - ApiKeyAuth: []
+
+definitions:
+  UserSchema:
+    type: "object"
+    properties:
+      _id:
+        type: "string"
+      email:
+        type: "string"
+        format: "email"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      role:
+        type: "string"
+        enum: ["admin", "user"]
+        default: "user"
+      status:
+        type: "string"
+        enum: ["active", "expired"]
+        default: "active"
+      lastLogin:
+        type: "string"
+        format: "date-time"
+
+  TestResponse:
+    type: "string"
+    default: "TESTING"

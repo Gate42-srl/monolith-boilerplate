@@ -1,6 +1,7 @@
 import { routes } from "./routes"
 import { default as authMiddleware } from "./middlewares/auth"
 import config from "config"
+import { swaggerPath } from "./swagger"
 import fastify from "fastify"
 import jwt from "fastify-jwt"
 import fastifyCORS from "fastify-cors"
@@ -23,6 +24,17 @@ app.register(fastifyCORS, {
 
 // Register fastify websocket
 app.register(fastifyWebSocket, { options: { clientTracking: true } })
+
+// Register swagger docs
+app.register(require("fastify-serve-swagger-ui"), {
+  // swagger specification
+  specification: {
+    type: "file",
+    path: swaggerPath,
+  },
+  // path under which swagger-ui will be available
+  path: "api-docs",
+})
 
 // Register all our routes
 app.register(routes)

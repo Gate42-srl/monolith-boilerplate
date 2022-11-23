@@ -12,6 +12,7 @@ import {
   REFRESH_SUCCESS,
 } from "./types"
 import { IAuthFunction, IConfigHeaders } from "../../types/interfaces"
+import ConfigData from "../../config/config.json"
 
 // Check token & load user
 export const loadUser = () => async (dispatch: Function, getState: Function) => {
@@ -19,7 +20,7 @@ export const loadUser = () => async (dispatch: Function, getState: Function) => 
   dispatch({ type: USER_LOADING })
 
   axios
-    .get("http://localhost:5000/auth/user", tokenConfig(getState))
+    .get(`${ConfigData.BACKEND_URL}/auth/user`, tokenConfig(getState))
     .then((res) =>
       dispatch({
         type: USER_LOADED,
@@ -37,7 +38,7 @@ export const loadUser = () => async (dispatch: Function, getState: Function) => 
 // Refresh token if it is expired
 export const refreshToken = () => async (dispatch: Function, getState: Function) => {
   axios
-    .post("http://localhost:5000/auth/token", {}, tokenConfig(getState))
+    .post(`${ConfigData.BACKEND_URL}/auth/token`, {}, tokenConfig(getState))
     .then((res) =>
       dispatch({
         type: REFRESH_SUCCESS,
@@ -67,7 +68,7 @@ export const register =
     const body = JSON.stringify({ email, password, firstName, lastName })
 
     axios
-      .post(`http://localhost:5000/auth/signup`, body, config)
+      .post(`${ConfigData.BACKEND_URL}//auth/signup`, body, config)
       .then((res) =>
         dispatch({
           type: REGISTER_SUCCESS,
@@ -97,7 +98,7 @@ export const login =
     const body = JSON.stringify({ email, password })
 
     axios
-      .post(`http://localhost:5000/auth/login`, body, config)
+      .post(`${ConfigData.BACKEND_URL}/auth/login`, body, config)
       .then((res) =>
         dispatch({
           type: LOGIN_SUCCESS,
