@@ -1,0 +1,95 @@
+version: "3.5"
+
+services:
+  redis:
+    networks:
+      - vonet-boilerplate
+    image: "docker.io/bitnami/redis:6.2-debian-10"
+    container_name: boilerplate_redis
+    environment:
+      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      # - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PASSWORD=password
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+    ports:
+      - "6378:6379"
+    volumes:
+      - "redis_boilerplate_data:/bitnami/redis/data"
+    healthcheck:
+      test: ["CMD", "redis", "ping"]
+      timeout: 20s
+      retries: 10
+
+  postgresql:
+    networks:
+      - vonet-boilerplate
+    image: mysql:5.7
+    container_name: boilerplate_postgres_db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: voice-office
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_user_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  phpmyadmin:
+    networks:
+      - vonet-boilerplate
+    image: phpmyadmin/phpmyadmin
+    container_name: boilerplate_pma
+    links:
+      - postgresql
+    environment:
+      PMA_HOST: postgresql
+      PMA_PORT: 5432
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 300M
+      MEMORY_LIMIT: 300M
+      MAX_EXECUTION_TIME: 3000
+    restart: always
+    ports:
+      - 8081:80
+
+  mongo:
+    networks:
+      - vonet-boilerplate
+    image: mongo:latest
+    container_name: boilerplate_mongo_db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    volumes:
+      - mongo-db:/data/db
+    ports:
+      - "27017:27017"
+
+  boilerplate:
+    networks:
+      - vonet-boilerplate
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vo_boilerplate
+    environment:
+      - NODE_ENV="development"
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./config/localdocker.json:/app/config/locale.json
+    command: ["npm", "run", "start:docker"]
+
+volumes:
+  redis_boilerplate_data:
+    driver: local
+  dbdata:
+  mongo-db:
+
+networks:
+  vonet-boilerplate:
+    name: vonet-boilerplate
+    driver: bridge

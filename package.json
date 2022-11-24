@@ -10,7 +10,8 @@
     "server": "nodemon ./index.ts",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\" ",
-    "test": "mocha -r ts-node/register 'tests/**/*.test.ts'"
+    "test": "mocha -r ts-node/register 'tests/**/*.test.ts'",
+    "start:docker": "NODE_ENV=development ./node_modules/nodemon/bin/nodemon.js  --legacy-watch ./index.ts --ignore swagger/swaggerDocs.yaml"
   },
   "repository": {
     "type": "git",
