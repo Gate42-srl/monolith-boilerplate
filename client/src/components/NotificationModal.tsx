@@ -21,8 +21,7 @@ const NotificationModal = ({ auth }: INotification) => {
         switch (JSON.parse(message.data).type) {
           case "test":
             data.push({
-              image:
-                "https://www.freepnglogos.com/uploads/dot-png/dot-popular-science-monthly-volume-may-illusions-37.png",
+              image: "https://pngimg.com/uploads/dot/dot_PNG29.png",
               message: JSON.parse(message.data).data,
               receivedTime: getNotificationReceivedTime(),
             })

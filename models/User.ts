@@ -9,8 +9,8 @@ const UserSchema = new mongoose.Schema<User>({
     required: [true, "email is required!"],
   },
   password: String,
-  firstName: String,
-  lastName: String,
+  firstname: String,
+  lastname: String,
   role: {
     type: String,
     enum: ["admin", "user"],

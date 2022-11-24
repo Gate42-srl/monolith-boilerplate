@@ -1,8 +1,8 @@
 export interface User {
   email: string
   password: string
-  firstName: string
-  lastName: string
+  firstname: string
+  lastname: string
   role: string
   status: string
   lastLogin: Date

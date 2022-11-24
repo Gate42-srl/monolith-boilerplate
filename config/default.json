@@ -9,7 +9,7 @@
     "user": "postgres",
     "host": "localhost",
     "database": "voice-office-tests",
-    "password": "password",
+    "password": "gate42emp99",
     "port": 5432
   },
   "LOGGER": false,

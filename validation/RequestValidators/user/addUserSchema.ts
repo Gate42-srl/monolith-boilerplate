@@ -3,8 +3,8 @@ import type { JSONSchemaType } from "ajv"
 export const addUserSchema: JSONSchemaType<{
   email: string
   password: string
-  firstName: string
-  lastName: string
+  firstname: string
+  lastname: string
   role?: string
   status?: string
   lastLogin?: string
@@ -21,11 +21,11 @@ export const addUserSchema: JSONSchemaType<{
       format: "password",
       pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$",
     },
-    firstName: {
+    firstname: {
       type: "string",
       minLength: 1,
     },
-    lastName: {
+    lastname: {
       type: "string",
       minLength: 1,
     },
@@ -45,6 +45,6 @@ export const addUserSchema: JSONSchemaType<{
       nullable: true,
     },
   },
-  required: ["email", "password", "firstName", "lastName"],
+  required: ["email", "password", "firstname", "lastname"],
   additionalProperties: false,
 }

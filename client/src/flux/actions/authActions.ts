@@ -55,7 +55,7 @@ export const refreshToken = () => async (dispatch: Function, getState: Function)
 
 // Register User
 export const register =
-  ({ email, password, firstName, lastName }: IAuthFunction) =>
+  ({ email, password, firstname, lastname }: IAuthFunction) =>
   (dispatch: Function) => {
     // Headers
     const config = {
@@ -65,10 +65,10 @@ export const register =
     }
 
     // Request body
-    const body = JSON.stringify({ email, password, firstName, lastName })
+    const body = JSON.stringify({ email, password, firstname, lastname })
 
     axios
-      .post(`${ConfigData.BACKEND_URL}//auth/signup`, body, config)
+      .post(`${ConfigData.BACKEND_URL}/auth/signup`, body, config)
       .then((res) =>
         dispatch({
           type: REGISTER_SUCCESS,

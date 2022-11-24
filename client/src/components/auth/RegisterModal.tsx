@@ -9,8 +9,8 @@ const RegisterModal = ({ isAuthenticated, error, register, clearErrors }: IRegis
   const [modal, setModal] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
+  const [firstname, setFirstName] = useState("")
+  const [lastname, setLastName] = useState("")
   const [msg, setMsg] = useState(null)
 
   const handleToggle = useCallback(() => {
@@ -31,8 +31,8 @@ const RegisterModal = ({ isAuthenticated, error, register, clearErrors }: IRegis
     const user = {
       email,
       password,
-      firstName,
-      lastName,
+      firstname,
+      lastname,
     }
 
     // Attempt to login
