@@ -2,16 +2,18 @@
   "PORT": 5000,
   "JWT_SECRET": "secretprova",
   "REFRESH_SECRET": "refreshprova",
+  "PASSWORD_RESET_SECRET": "passwordprova",
   "MODE": "development",
-  "DATABASE": "postgresql",
-  "DATABASE_URI": "mongodb://localhost:27017/voice-office-tests",
+  "DATABASE": "mongodb",
+  "DATABASE_URI": "mongodb://localhost:27017/tests",
   "POSTGRES_SETTINGS": {
     "user": "postgres",
     "host": "localhost",
-    "database": "voice-office-tests",
+    "database": "tests",
     "password": "password",
     "port": 5432
   },
   "LOGGER": false,
-  "LOCAL_ENVIRONMENT": true
+  "LOCAL_ENVIRONMENT": false,
+  "BASE_LOCAL_URL": "http://localhost:5000"
 }

@@ -7,14 +7,13 @@ import jwt from "fastify-jwt"
 import fastifyCORS from "fastify-cors"
 import fastifyExpress from "fastify-express"
 import fastifyWebSocket from "fastify-websocket"
-
-const logger: boolean = config.get("LOGGER")
+import { logger, JWT_SECRET } from "./utils"
 
 export const app = fastify({ logger })
 
 // Register fastify-jwt
 app.register(jwt, {
-  secret: config.get("JWT_SECRET"),
+  secret: JWT_SECRET,
 })
 
 // Register fastifyCORS

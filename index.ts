@@ -5,13 +5,14 @@ import { app } from "./server"
 import { connectToDB } from "./databases"
 import { logger } from "./winston"
 import moment from "moment"
+import { modeProcess, database, port } from "./utils"
 
 // Set the app error handler
 app.setErrorHandler(errorHandler)
 
 const databaseConnection = async () => {
   // Connect to DB
-  let result = await connectToDB(config.get("DATABASE"))
+  let result = await connectToDB(database)
   if (!result) {
     logger.error("DB connection failed...")
     throw new Error("DB connection failed...")
@@ -21,21 +22,15 @@ const databaseConnection = async () => {
 databaseConnection()
 
 const start = async () => {
-  await app.listen(config.get("PORT"), "0.0.0.0")
+  await app.listen(port, "0.0.0.0")
   const appAddress = app.server.address() as AddressInfo
 
   // Don't logs on test environment
-  if (config.get("MODE") == "test") return
+  if (modeProcess == "test") return
 
-  console.log(
-    `Server listening on ${appAddress.port} ${moment()} in ${config.get("MODE")} mode using ${config.get(
-      "DATABASE"
-    )} database`
-  )
+  console.log(`Server listening on ${appAddress.port} ${moment()} in ${modeProcess} mode using ${database} database`)
 
-  logger.info(
-    `Server listening on ${appAddress.port} in ${config.get("MODE")} mode using ${config.get("DATABASE")} database`
-  )
+  logger.info(`Server listening on ${appAddress.port} in ${modeProcess} mode using ${database} database`)
 }
 
 // Start the server

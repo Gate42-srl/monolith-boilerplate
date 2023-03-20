@@ -1,7 +1,7 @@
 {
   "name": "monolith-boilerplate",
   "version": "1.0.0",
-  "description": "Voice Office monolithic boilerplate",
+  "description": "Monolithic boilerplate",
   "main": "index.ts",
   "scripts": {
     "installation": "npm install && npm install --prefix client",

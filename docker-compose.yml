@@ -3,7 +3,7 @@ version: "3.5"
 services:
   redis:
     networks:
-      - vonet-boilerplate
+      - net-boilerplate
     image: "docker.io/bitnami/redis:6.2-debian-10"
     container_name: boilerplate_redis
     environment:
@@ -22,12 +22,12 @@ services:
 
   postgresql:
     networks:
-      - vonet-boilerplate
+      - net-boilerplate
     image: mysql:5.7
     container_name: boilerplate_postgres_db
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: voice-office
+      MYSQL_DATABASE: tests
       MYSQL_USER: db_user
       MYSQL_PASSWORD: db_user_pass
     ports:
@@ -37,7 +37,7 @@ services:
 
   phpmyadmin:
     networks:
-      - vonet-boilerplate
+      - net-boilerplate
     image: phpmyadmin/phpmyadmin
     container_name: boilerplate_pma
     links:
@@ -55,7 +55,7 @@ services:
 
   mongo:
     networks:
-      - vonet-boilerplate
+      - net-boilerplate
     image: mongo:latest
     container_name: boilerplate_mongo_db
     environment:
@@ -68,11 +68,11 @@ services:
 
   boilerplate:
     networks:
-      - vonet-boilerplate
+      - net-boilerplate
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: vo_boilerplate
+    container_name: boilerplate
     environment:
       - NODE_ENV="development"
     ports:
@@ -90,6 +90,6 @@ volumes:
   mongo-db:
 
 networks:
-  vonet-boilerplate:
-    name: vonet-boilerplate
+  net-boilerplate:
+    name: net-boilerplate
     driver: bridge

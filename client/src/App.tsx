@@ -2,7 +2,6 @@ import React, { useEffect } from "react"
 import AppNavbar from "./components/AppNavbar"
 import PlaceHolderModal from "./components/PlaceHolderModal"
 import { Container } from "reactstrap"
-
 import { Provider } from "react-redux"
 import store from "./flux/store"
 import { loadUser, refreshToken } from "./flux/actions/authActions"

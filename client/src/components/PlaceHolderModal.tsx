@@ -8,7 +8,7 @@ const PlaceHolderModal = ({ isAuthenticated }: { isAuthenticated: boolean }) => 
       {isAuthenticated ? (
         <h4 className="mb-3 ml-4">You've succesfully logged in.</h4>
       ) : (
-        <h4 className="mb-3 ml-4">Welcome to Voice Office, please log in.</h4>
+        <h4 className="mb-3 ml-4">Welcome to Boilerplate, please log in.</h4>
       )}
     </div>
   )

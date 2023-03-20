@@ -4,12 +4,13 @@ import { Pool } from "pg"
 
 import { logger } from "../winston"
 import { dbCheck } from "./dbCheck"
+import { modeProcess } from "../utils"
 
 export const pool = new Pool(config.get("POSTGRES_SETTINGS"))
 
 export const connectToPostgreSQL = async () => {
   // Don't init db and don't log on test environment
-  if (config.get("MODE") == "test") return pool
+  if (modeProcess == "test") return pool
 
   // Check for init
   await dbCheck()

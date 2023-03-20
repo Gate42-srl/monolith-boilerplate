@@ -12,8 +12,8 @@ export async function dbCheck() {
 
   // if there's no user in database, initialize it with an admin
   const admin = {
-    email: "admin@voiceoffice.io",
-    password: "Superman42",
+    email: "admin@boilerplate.io",
+    password: "boilerplate",
     role: "admin",
   } as User
 

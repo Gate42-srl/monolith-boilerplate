@@ -1,12 +1,14 @@
 import bcrypt from "bcrypt"
-import config from "config"
 import jwt from "jsonwebtoken"
-import { AuthPayload, RefreshUserPayload, UserPayload, userClaims } from "../types"
+import { AuthPayload, userClaims } from "../types"
+import { JWT_SECRET, PASSWORD_RESET_SECRET, REFRESH_SECRET } from "./environment"
 
 // WSconst expire: Date = new Date(new Date().getTime() - 1000) // GENERATES AN EXPIRED TOKEN FOR TESTING
-const expire: Date = new Date(new Date().getTime() + 240 * 60000)
+// const expire: Date = new Date(new Date().getTime() + 240 * 60000)
+const expire: string = "4h"
 // const refreshExpire: Date = new Date(expire.getTime()) // GENERATES AN EXPIRED REFRESH TOKEN FOR TESTING
-const refreshExpire: Date = new Date(expire.getTime() + 864 * 100000)
+// const refreshExpire: Date = new Date(expire.getTime() + 864 * 100000)
+const refreshExpire: string = "24h"
 
 /**
  * @function encryptPassword
@@ -33,16 +35,33 @@ export const comparePassword = (password: string, hash: string): Promise<boolean
 export const generateJwt = (type: string, claims: userClaims): string | null => {
   const { _id, email, role } = claims
 
-  if (type === "access") return jwt.sign({ _id, email, role, expire }, config.get("JWT_SECRET"))
-  else if (type === "refresh") return jwt.sign({ email, expire: refreshExpire }, config.get("REFRESH_SECRET"))
-  else return null
+  switch (type) {
+    case "access":
+      return jwt.sign({ _id, email, role }, JWT_SECRET, {
+        expiresIn: expire,
+      })
+    case "refresh":
+      return jwt.sign({ email }, REFRESH_SECRET, {
+        expiresIn: refreshExpire,
+      })
+    case "passwordReset":
+      return jwt.sign({ _id }, PASSWORD_RESET_SECRET, {
+        expiresIn: "48h",
+      })
+    default:
+      return null
+  }
 }
 
 export const decodeToken = async (type: string, token: string) => {
-  const decodedToken: UserPayload | RefreshUserPayload =
-    type === "access"
-      ? ((await jwt.verify(token, config.get("JWT_SECRET"))) as AuthPayload)
-      : ((await jwt.verify(token, config.get("REFRESH_SECRET"))) as AuthPayload)
-
-  return decodedToken
+  switch (type) {
+    case "access":
+      return (await jwt.verify(token, JWT_SECRET)) as AuthPayload
+    case "refresh":
+      return (await jwt.verify(token, REFRESH_SECRET)) as AuthPayload
+    case "passwordReset":
+      return (await jwt.verify(token, PASSWORD_RESET_SECRET)) as AuthPayload
+    default:
+      return null
+  }
 }

@@ -1,5 +1,4 @@
-import config from "config"
-const database = (config.get("DATABASE") as string).toLowerCase()
+import { database } from "../utils"
 
 import { Create, pool } from "../databases/PostgreSQL"
 import { refreshTokenModel } from "../models"

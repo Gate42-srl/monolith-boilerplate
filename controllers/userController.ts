@@ -1,6 +1,5 @@
-import config from "config"
 import mongoose from "mongoose"
-const database = (config.get("DATABASE") as string).toLowerCase()
+import { database } from "../utils"
 
 import { GetById, GetAll, Create, Update, Delete, pool } from "../databases/PostgreSQL"
 import { UserModel } from "../models"

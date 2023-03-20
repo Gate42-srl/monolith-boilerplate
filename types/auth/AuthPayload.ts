@@ -12,4 +12,4 @@ export interface RefreshUserPayload {
   iat?: number
 }
 
-export type AuthPayload = UserPayload | RefreshUserPayload
+export type AuthPayload = UserPayload | RefreshUserPayload | Partial<UserPayload>

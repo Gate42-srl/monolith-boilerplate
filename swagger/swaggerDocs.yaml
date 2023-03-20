@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
-  description: "Voice Office boilerplate API documentation."
+  description: "Monolith boilerplate API documentation."
   version: "1.0.0"
-  title: "Voice-Office"
+  title: "Monolith-Boilerplate"
 
 basePath: "/"
 tags:

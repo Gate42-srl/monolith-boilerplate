@@ -1,9 +1,9 @@
-import config from "config"
 import moment from "moment"
 import mongoose from "mongoose"
 
 import { logger } from "../winston"
 import { dbCheck } from "./dbCheck"
+import { databaseUri, modeProcess } from "../utils"
 
 // Handle connection error then disconnect all connections
 mongoose.connection.on("error", (error) => {
@@ -32,10 +32,10 @@ mongoose.connection.on("disconnected", function () {
  * @description Utility function that estabilish a connection to to the database
  */
 export const connectToMongoDB = async () => {
-  const connection = await mongoose.connect(config.get("DATABASE_URI")!)
+  const connection = await mongoose.connect(databaseUri)
 
   // Don't init db and don't log on test environment
-  if (config.get("MODE") == "test") return connection
+  if (modeProcess == "test") return connection
 
   // Check for init
   await dbCheck()

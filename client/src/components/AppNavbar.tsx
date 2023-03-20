@@ -44,7 +44,7 @@ const AppNavbar = ({ auth }: IAppNavbar) => {
     <div>
       <Navbar color="dark" dark expand="sm" className="mb-5">
         <Container>
-          <NavbarBrand href="/">Voice Office</NavbarBrand>
+          <NavbarBrand href="/">Boilerplate</NavbarBrand>
           <NavbarToggler onClick={handleToggle} />
           <Collapse isOpen={isOpen} navbar>
             <Nav className="ml-auto" navbar>

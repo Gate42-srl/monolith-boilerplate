@@ -6,7 +6,7 @@
 
 </p>
 
-> monolith-boilerplate is a standard implementation for MERN projects, which can be used to initialize them. It was originally made for voice-office app, but it can fit future projects.
+> monolith-boilerplate is a standard implementation for MERN projects, which can be used to initialize them. It was originally made for APM-verniciature app, but it can fit future projects.
 
 ### 🏠 [Homepage](https://github.com/Gate42-srl/monolith-boilerplate/blob/feature/initialization/README.md)
 

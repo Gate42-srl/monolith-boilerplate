@@ -1,5 +1,5 @@
 import { logger } from "../winston"
-import config from "config"
+import { modeProcess } from "../utils"
 
 /**
  * Custom error handler for exceptions throwed during API requests
@@ -27,7 +27,7 @@ export const errorHandler = (error: any, request: any, res: any) => {
   const errorBody = {
     status: "error",
     // In development mode include also error details
-    ...(config.get("MODE") !== "Production" && {
+    ...(modeProcess !== "Production" && {
       error: errorData,
     }),
     msg: error.message || "Internal server error",
