@@ -1,0 +1,38 @@
+.navbar {
+  background-color: #313131;
+  height: 90px;
+}
+
+.list {
+  position: absolute;
+  top: 36px;
+  left: 180px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 30px;
+  font-weight: 700;
+  list-style: none;
+  margin: 0;
+  margin-left: 10px;
+  padding: 0;
+}
+
+.navlist {
+  flex: 1;
+}
+
+.role {
+  color: white;
+}
+
+.logoutButton {
+  color: #313131;
+  background-color: white;
+}
+
+.Logo {
+  position: absolute;
+  top: 10px;
+  left: -40px;
+  height: 60px;
+}

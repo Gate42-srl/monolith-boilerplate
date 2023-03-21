@@ -19,6 +19,7 @@ export interface IUser {
   password: string
   firstname?: string
   lastname?: string
+  role?: string
 }
 
 export interface IAuthForm {
@@ -27,12 +28,8 @@ export interface IAuthForm {
   clearErrors(): void
 }
 
-export interface ILoginModal extends IAuthForm {
+export interface ILogin extends IAuthForm {
   login(user: IUser): void
-}
-
-export interface IRegisterModal extends IAuthForm {
-  register(user: IUser): void
 }
 
 export interface ILogoutProps {
@@ -41,7 +38,7 @@ export interface ILogoutProps {
 
 export interface IError {
   id: E_ERROR
-  msg: IMsg
+  msg: string | any
 }
 
 export interface IAuthReduxProps {
@@ -52,21 +49,6 @@ export interface IAuthReduxProps {
 export interface IConfigHeaders {
   headers: {
     [index: string]: string
-  }
-}
-
-export interface INotification {
-  auth?: {
-    isAuthenticated: boolean
-    user: Partial<IUser> & { _id: string }
-  }
-}
-
-// NAVBAR
-export interface IAppNavbar {
-  auth?: {
-    isAuthenticated: boolean
-    user: Partial<IUser> & { _id: string }
   }
 }
 

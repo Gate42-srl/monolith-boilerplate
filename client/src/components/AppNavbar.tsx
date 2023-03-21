@@ -1,58 +1,52 @@
-import React, { Fragment, useEffect, useState } from "react"
-import { Collapse, Navbar, NavbarToggler, NavbarBrand, Nav, NavItem, Container } from "reactstrap"
+// React imports
+import React from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { connect } from "react-redux"
-import { IAppNavbar, IAuthReduxProps } from "../types/interfaces"
 
-import RegisterModal from "./auth/RegisterModal"
-import LoginModal from "./auth/LoginModal"
-import Logout from "./auth/Logout"
-import NotificationModal from "./NotificationModal"
+// types
+import { IAuthReduxProps } from "../types/interfaces"
 
-const AppNavbar = ({ auth }: IAppNavbar) => {
-  const [isOpen, setIsOpen] = useState(false)
+// Login logic import
+import { logout } from "../flux/actions/authActions"
 
-  const handleToggle = () => setIsOpen(!isOpen)
+// ANTD
+import { Button } from "antd"
 
-  const authLinks = (
-    <Fragment>
-      <NavItem>
-        <span className="navbar-text mr-3">
-          <strong>{auth && auth.user ? `Welcome ${auth.user.firstname}` : ""}</strong>
-        </span>
-      </NavItem>
-      <NavItem>
-        <Logout />
-      </NavItem>
-      <NavItem>
-        <NotificationModal />
-      </NavItem>
-    </Fragment>
-  )
+// CSS and image
+import Logo from "../assets/img/logo.png"
+import "./css/AppNavbar.css"
 
-  const guestLinks = (
-    <Fragment>
-      <NavItem>
-        <RegisterModal />
-      </NavItem>
-      <NavItem>
-        <LoginModal />
-      </NavItem>
-    </Fragment>
-  )
+const AppNavbar = ({ auth, logout }: any) => {
+  // Navigation hooks
+  const navigate = useNavigate()
+  const location = useLocation()
 
   return (
     <div>
-      <Navbar color="dark" dark expand="sm" className="mb-5">
-        <Container>
-          <NavbarBrand href="/">Boilerplate</NavbarBrand>
-          <NavbarToggler onClick={handleToggle} />
-          <Collapse isOpen={isOpen} navbar>
-            <Nav className="ml-auto" navbar>
-              {auth && auth.isAuthenticated ? authLinks : guestLinks}
-            </Nav>
-          </Collapse>
-        </Container>
-      </Navbar>
+      <header
+        className="navbar"
+        style={{
+          visibility: location.pathname === "/admin/" || location.pathname === "/admin" ? "visible" : "hidden",
+        }}
+      >
+        <img src={Logo} alt="logo" className="Logo"></img>
+        <nav className="navlist">
+          <ul className="list">
+            <li className="role">{"Admin"}</li>
+          </ul>
+        </nav>
+        <Button
+          type="ghost"
+          shape="round"
+          className="logoutButton"
+          onClick={() => {
+            logout()
+            navigate("/login/")
+          }}
+        >
+          Logout
+        </Button>
+      </header>
     </div>
   )
 }
@@ -61,4 +55,4 @@ const mapStateToProps = (state: IAuthReduxProps) => ({
   auth: state.auth,
 })
 
-export default connect(mapStateToProps, null)(AppNavbar)
+export default connect(mapStateToProps, { logout })(AppNavbar)

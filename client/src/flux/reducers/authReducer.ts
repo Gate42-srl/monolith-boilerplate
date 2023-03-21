@@ -18,7 +18,7 @@ const initialState = {
   user: null,
 }
 
-export default function (state = initialState, action: any) {
+export default function authReducer(state = initialState, action: any) {
   switch (action.type) {
     case USER_LOADING:
       return {
@@ -26,6 +26,7 @@ export default function (state = initialState, action: any) {
         isLoading: true,
       }
     case USER_LOADED:
+      localStorage.setItem("userRole", action.payload.role)
       return {
         ...state,
         isAuthenticated: true,
@@ -37,18 +38,28 @@ export default function (state = initialState, action: any) {
     case REFRESH_SUCCESS:
       localStorage.setItem("token", action.payload.token)
       localStorage.setItem("refreshToken", action.payload.refreshToken)
-      return {
-        ...state,
-        ...action.payload,
-        isAuthenticated: true,
-        isLoading: false,
-      }
+      localStorage.setItem("userRole", action.payload.user.role)
+      if (action.payload.user.role === "admin")
+        return {
+          ...state,
+          ...action.payload,
+          isAuthenticated: true,
+          isLoading: false,
+        }
+      else
+        return {
+          ...state,
+          ...action.payload,
+          isAuthenticated: false,
+          isLoading: false,
+        }
     case AUTH_ERROR:
     case LOGIN_FAIL:
     case LOGOUT_SUCCESS:
     case REGISTER_FAIL:
       localStorage.removeItem("token")
       localStorage.removeItem("refreshToken")
+      localStorage.removeItem("userRole")
       return {
         ...state,
         token: null,

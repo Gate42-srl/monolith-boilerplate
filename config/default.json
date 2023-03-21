@@ -5,7 +5,7 @@
   "PASSWORD_RESET_SECRET": "passwordprova",
   "MODE": "development",
   "DATABASE": "mongodb",
-  "DATABASE_URI": "mongodb://localhost:27017/tests",
+  "DATABASE_URI": "mongodb://127.0.0.1:27017/tests",
   "POSTGRES_SETTINGS": {
     "user": "postgres",
     "host": "localhost",

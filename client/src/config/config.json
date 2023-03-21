@@ -1,5 +1,5 @@
 {
   "MODE": "development",
   "BACKEND_URL": "http://localhost:5000",
-  "WEBSOCKET_ENDPOINT": "ws://localhost:5000/requestSocket"
+  "DEPLOY_BACKEND_URL": "https://your-deplyment-url"
 }

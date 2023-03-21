@@ -1,0 +1,65 @@
+.blockButton {
+  background-color: red;
+  color: white;
+}
+
+.blockButton:hover {
+  background-color: #ff3939;
+  color: white;
+  border-color: #ff3939;
+  transition: 0.2s;
+}
+
+.unblockButton {
+  background-color: rgb(79, 79, 255);
+  color: white;
+}
+
+.unblockButton:hover {
+  background-color: rgb(14, 129, 175);
+  color: white;
+  border-color: rgb(14, 129, 175);
+  transition: 0.2s;
+}
+
+.adminDeleteButton {
+  background-color: white;
+  margin-right: -15px;
+}
+
+.adminDeleteButton:hover {
+  background-color: white;
+  border-color: white;
+  margin-right: -15px;
+}
+
+.defaultButton {
+  color: white;
+  background-color: #313131;
+  border-color: #313131;
+}
+
+.defaultButton:hover {
+  color: white;
+  background-color: #585858;
+  border-color: #585858;
+}
+
+.adminDeleteIcon {
+  height: 25px;
+  margin-top: -2px;
+}
+
+.adminDeleteIcon:hover {
+  height: 25px;
+  margin-top: -2px;
+  transition: 0.2s;
+  opacity: 0.8;
+}
+
+.userListText {
+  margin-top: 30px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: bold;
+  color: white;
+}
