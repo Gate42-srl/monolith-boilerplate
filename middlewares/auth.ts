@@ -1,6 +1,6 @@
-import { DeleteRefreshTokenFromToken } from "../controllers/authController"
+import { DeleteRefreshTokenFromToken, GetRefreshTokenFromToken } from "../controllers/authController"
 import { UserPayload } from "../types"
-import { encrypter, getLoggedUser, isExpired } from "../utils"
+import { getLoggedUser, isExpired } from "../utils"
 
 // Middleware that authorize the user
 export default async (req: any, res: any) => {
@@ -9,23 +9,29 @@ export default async (req: any, res: any) => {
   if (!authorization || !refresh) return res.code(401).send("Missing Token")
 
   try {
-    // Verify the JWT
-    const decoded = (await encrypter.decodeToken("access", authorization)) as UserPayload
+    // Verify the refresh JWT
+    const refreshDecoded = (await isExpired("refresh", refresh)) as UserPayload | string
+
+    // Verify the regular JWT
+    const decoded = (await isExpired("access", authorization)) as UserPayload | string
 
     // Check if the payload exists
-    if (!decoded) return res.code(401).send("Invalid token")
+    if (!decoded && !refreshDecoded) return res.code(401).send("Invalid token")
 
-    // Checks if both access and refresh token are expired
-    if ((await isExpired("access", authorization)) && (await isExpired("refresh", refresh))) {
-      // Calls database function to delete expired refresh token
+    // Checks if one of the two tokens is expired
+    if (refreshDecoded == "expired") {
+      // Calls DB function to delete refresh token
       await DeleteRefreshTokenFromToken(refresh)
 
-      // If both are expired return an authorization error
-      return res.code(401).send("Token expired")
+      return res.code(403).send("Refresh Token Expired")
     }
+    if (decoded == "expired") return res.status(401).send("Token Expired")
+
+    // Verifies if exists given refresh token into database
+    if (!GetRefreshTokenFromToken(refresh)) return res.status(403).send("Authentication failed")
 
     // Check if the user exists
-    const user = await getLoggedUser(decoded)
+    const user = await getLoggedUser(decoded as UserPayload)
     if (!user) return res.code(403).send("Authentication failed")
 
     // Add the user to the req

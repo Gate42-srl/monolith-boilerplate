@@ -8,7 +8,7 @@ chai.use(chaiAsPromised)
 
 import jwt from "jsonwebtoken"
 import config from "config"
-import { userClaims } from "../../types"
+import { userClaims, UserPayload } from "../../types"
 import { getMockedRequest, getMockedResponse } from "../utils"
 import { faker } from "@faker-js/faker"
 import mongoose from "mongoose"
@@ -83,7 +83,7 @@ describe("auth middleware test", () => {
   })
 
   describe("When token is not missing", () => {
-    describe("When decode token fails", () => {
+    describe("When isExpired fails", () => {
       before(() => {
         mockedRequest = getMockedRequest({
           headers: {
@@ -94,7 +94,7 @@ describe("auth middleware test", () => {
 
         mockedResponse = getMockedResponse()
 
-        sinon.stub(encrypter, "decodeToken").rejects()
+        sinon.stub(token, "isExpired").rejects()
       })
 
       it("should throw an error", async () => {
@@ -110,8 +110,8 @@ describe("auth middleware test", () => {
       })
     })
 
-    describe("When decode token succedes", () => {
-      describe("When token is invalid", () => {
+    describe("When isExpired succedes and both tokens are expired", () => {
+      describe("When DeleteRefreshTokenFromToken fails", () => {
         before(() => {
           mockedRequest = getMockedRequest({
             headers: {
@@ -122,11 +122,17 @@ describe("auth middleware test", () => {
 
           mockedResponse = getMockedResponse()
 
-          sinon.stub(encrypter, "decodeToken").resolves(undefined)
+          sinon.stub(token, "isExpired").resolves("expired")
+
+          sinon.stub(authController, "DeleteRefreshTokenFromToken").rejects()
         })
 
-        it("should return 'invalid token'", async () => {
-          return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Invalid token")
+        it("should throw an error", async () => {
+          return expect(await auth(mockedRequest, mockedResponse)).has.throw
+        })
+
+        it("should return 'Unable to parse token'", async () => {
+          return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Unable to parse token")
         })
 
         after(() => {
@@ -134,8 +140,72 @@ describe("auth middleware test", () => {
         })
       })
 
-      describe("When token is valid", () => {
-        describe("When isExpired fails", () => {
+      describe("When DeleteRefreshTokenFromToken succedes", () => {
+        const refreshToken = getFakeRefreshToken() as { token: string; userId: mongoose.Types.ObjectId }
+
+        before(() => {
+          mockedRequest = getMockedRequest({
+            headers: {
+              authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
+              refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
+            },
+          })
+
+          mockedResponse = getMockedResponse()
+
+          sinon.stub(token, "isExpired").resolves("expired")
+
+          sinon.stub(authController, "DeleteRefreshTokenFromToken").resolves(refreshToken)
+        })
+
+        it("should return 'Refresh Token Expired'", async () => {
+          return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Refresh Token Expired")
+        })
+
+        after(() => {
+          sinon.restore()
+        })
+      })
+    })
+
+    describe("When isExpired succedes and tokens are not expired", () => {
+      describe("When getLoggedUser fails", () => {
+        before(() => {
+          mockedRequest = getMockedRequest({
+            headers: {
+              authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
+              refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
+            },
+          })
+
+          mockedResponse = getMockedResponse()
+
+          sinon.stub(token, "isExpired").resolves({
+            _id: "63f3974daffe19b9f50604d5",
+            email: "admin@apmverniciature.io",
+            role: "admin",
+            iat: 1678451086,
+            exp: 1678465486,
+          } as UserPayload)
+
+          sinon.stub(token, "getLoggedUser").rejects()
+        })
+
+        it("should throw an error", async () => {
+          return expect(await auth(mockedRequest, mockedResponse)).has.throw
+        })
+
+        it("should return 'Unable to parse token'", async () => {
+          return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Unable to parse token")
+        })
+
+        after(() => {
+          sinon.restore()
+        })
+      })
+
+      describe("When getLoggedUser succedes", () => {
+        describe("When user dosn't exists", () => {
           before(() => {
             mockedRequest = getMockedRequest({
               headers: {
@@ -146,23 +216,19 @@ describe("auth middleware test", () => {
 
             mockedResponse = getMockedResponse()
 
-            sinon.stub(encrypter, "decodeToken").resolves({
-              _id: new mongoose.Types.ObjectId().toString(),
-              email: faker.internet.email(),
-              role: "user",
-              expire: new Date(),
-              iat: parseInt(faker.random.numeric()),
-            })
+            sinon.stub(token, "isExpired").resolves({
+              _id: "63f3974daffe19b9f50604d5",
+              email: "admin@apmverniciature.io",
+              role: "admin",
+              iat: 1678451086,
+              exp: 1678465486,
+            } as UserPayload)
 
-            sinon.stub(token, "isExpired").rejects()
+            sinon.stub(token, "getLoggedUser").resolves(undefined)
           })
 
-          it("should throw an error", async () => {
-            return expect(await auth(mockedRequest, mockedResponse)).has.throw
-          })
-
-          it("should return 'Unable to parse token'", async () => {
-            return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Unable to parse token")
+          it("should return 'Authentication failed'", async () => {
+            return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Authentication failed")
           })
 
           after(() => {
@@ -170,188 +236,38 @@ describe("auth middleware test", () => {
           })
         })
 
-        describe("When isExpired succedes and both tokens are expired", () => {
-          describe("When DeleteRefreshTokenFromToken fails", () => {
-            before(() => {
-              mockedRequest = getMockedRequest({
-                headers: {
-                  authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
-                  refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
-                },
-              })
+        describe("When user exists", () => {
+          const decodedToken = {
+            _id: "63f3974daffe19b9f50604d5",
+            email: "admin@apmverniciature.io",
+            role: "admin",
+            iat: 1678451086,
+            exp: 1678465486,
+          }
 
-              mockedResponse = getMockedResponse()
-
-              sinon.stub(encrypter, "decodeToken").resolves({
-                _id: new mongoose.Types.ObjectId().toString(),
-                email: faker.internet.email(),
-                role: "user",
-                expire: new Date(),
-                iat: parseInt(faker.random.numeric()),
-              })
-
-              sinon.stub(token, "isExpired").resolves(true)
-
-              sinon.stub(authController, "DeleteRefreshTokenFromToken").rejects()
+          before(() => {
+            mockedRequest = getMockedRequest({
+              headers: {
+                authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
+                refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
+              },
             })
 
-            it("should throw an error", async () => {
-              return expect(await auth(mockedRequest, mockedResponse)).has.throw
-            })
+            mockedResponse = getMockedResponse()
 
-            it("should return 'Unable to parse token'", async () => {
-              return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Unable to parse token")
-            })
+            sinon.stub(token, "isExpired").resolves(decodedToken as UserPayload)
 
-            after(() => {
-              sinon.restore()
-            })
+            sinon.stub(token, "getLoggedUser").resolves(getFakeUsers(1)[0])
           })
 
-          describe("When DeleteRefreshTokenFromToken succedes", () => {
-            const refreshToken = getFakeRefreshToken() as { token: string; userId: mongoose.Types.ObjectId }
+          it("should set decoded token in req.user", async () => {
+            await auth(mockedRequest, mockedResponse)
 
-            before(() => {
-              mockedRequest = getMockedRequest({
-                headers: {
-                  authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
-                  refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
-                },
-              })
-
-              mockedResponse = getMockedResponse()
-
-              sinon.stub(encrypter, "decodeToken").resolves({
-                _id: new mongoose.Types.ObjectId().toString(),
-                email: faker.internet.email(),
-                role: "user",
-                expire: new Date(),
-                iat: parseInt(faker.random.numeric()),
-              })
-
-              sinon.stub(token, "isExpired").resolves(true)
-
-              sinon.stub(authController, "DeleteRefreshTokenFromToken").resolves(refreshToken)
-            })
-
-            it("should return 'token expired'", async () => {
-              return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Token expired")
-            })
-
-            after(() => {
-              sinon.restore()
-            })
-          })
-        })
-
-        describe("When isExpired succedes and tokens are not expired", () => {
-          describe("When getLoggedUser fails", () => {
-            before(() => {
-              mockedRequest = getMockedRequest({
-                headers: {
-                  authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
-                  refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
-                },
-              })
-
-              mockedResponse = getMockedResponse()
-
-              sinon.stub(encrypter, "decodeToken").resolves({
-                _id: new mongoose.Types.ObjectId().toString(),
-                email: faker.internet.email(),
-                role: "user",
-                expire: new Date(),
-                iat: parseInt(faker.random.numeric()),
-              })
-
-              sinon.stub(token, "isExpired").resolves(false)
-
-              sinon.stub(token, "getLoggedUser").rejects()
-            })
-
-            it("should throw an error", async () => {
-              return expect(await auth(mockedRequest, mockedResponse)).has.throw
-            })
-
-            it("should return 'Unable to parse token'", async () => {
-              return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Unable to parse token")
-            })
-
-            after(() => {
-              sinon.restore()
-            })
+            return expect(mockedRequest.user).to.be.equal(decodedToken)
           })
 
-          describe("When getLoggedUser succedes", () => {
-            describe("When user dosn't exists", () => {
-              before(() => {
-                mockedRequest = getMockedRequest({
-                  headers: {
-                    authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
-                    refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
-                  },
-                })
-
-                mockedResponse = getMockedResponse()
-
-                sinon.stub(encrypter, "decodeToken").resolves({
-                  _id: new mongoose.Types.ObjectId().toString(),
-                  email: faker.internet.email(),
-                  role: "user",
-                  expire: new Date(),
-                  iat: parseInt(faker.random.numeric()),
-                })
-
-                sinon.stub(token, "isExpired").resolves(false)
-
-                sinon.stub(token, "getLoggedUser").resolves(undefined)
-              })
-
-              it("should return 'Authentication failed'", async () => {
-                return expect(await auth(mockedRequest, mockedResponse)).to.be.equal("Authentication failed")
-              })
-
-              after(() => {
-                sinon.restore()
-              })
-            })
-
-            describe("When user exists", () => {
-              const decodedToken = {
-                _id: new mongoose.Types.ObjectId().toString(),
-                email: faker.internet.email(),
-                role: "user",
-                expire: new Date(),
-                iat: parseInt(faker.random.numeric()),
-              }
-
-              before(() => {
-                mockedRequest = getMockedRequest({
-                  headers: {
-                    authorization: encrypter.generateJwt("access", getFakeUsers(1)[0]) as string,
-                    refresh: encrypter.generateJwt("refresh", getFakeUsers(1)[0]) as string,
-                  },
-                })
-
-                mockedResponse = getMockedResponse()
-
-                sinon.stub(encrypter, "decodeToken").resolves(decodedToken)
-
-                sinon.stub(token, "isExpired").resolves(false)
-
-                sinon.stub(token, "getLoggedUser").resolves(getFakeUsers(1)[0])
-              })
-
-              it("should set decoded token in req.user", async () => {
-                await auth(mockedRequest, mockedResponse)
-
-                return expect(mockedRequest.user).to.be.equal(decodedToken)
-              })
-
-              after(() => {
-                sinon.restore()
-              })
-            })
+          after(() => {
+            sinon.restore()
           })
         })
       })

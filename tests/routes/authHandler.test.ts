@@ -21,6 +21,7 @@ import { faker } from "@faker-js/faker"
 import { getMockedRequest, getMockedResponse } from "../utils"
 import { encrypter } from "../../utils"
 import * as token from "../../utils/token"
+import { UserPayload } from "../../types"
 
 const getFakeUsers = (amount: number) => {
   let users: any[] = []
@@ -32,6 +33,10 @@ const getFakeUsers = (amount: number) => {
       password: faker.internet.password(),
       firstName: faker.name.firstName(),
       lastName: faker.name.lastName(),
+      companyId: new mongoose.Types.ObjectId(),
+      phoneNumber: faker.phone.number().toString(),
+      amazonMail: faker.internet.email(),
+      note: faker.random.words(),
       role: "user",
       status: "active",
       lastLogin: new Date(),
@@ -79,33 +84,13 @@ describe("Auth handler tests", () => {
     })
 
     describe("When GetUserByEmail database function succedes", () => {
-      describe("When CreateUser database function fails", () => {
-        before(() => {
-          mockedRequest = getMockedRequest({ body: user })
-          mockedResponse = getMockedResponse()
-
-          sinon.stub(userController, "GetUserByEmail").resolves(null)
-          sinon.stub(userController, "CreateUser").rejects()
-        })
-
-        it("should reject", () => {
-          return expect(handler(mockedRequest, mockedResponse)).to.be.eventually.rejected
-        })
-
-        after(() => {
-          sinon.restore()
-        })
-      })
-
-      describe("When CreateUser database function succedes", () => {
-        describe("When GetRefreshTokenFromUserId database function fails", () => {
+        describe("When CreateUser database function fails", () => {
           before(() => {
             mockedRequest = getMockedRequest({ body: user })
             mockedResponse = getMockedResponse()
 
             sinon.stub(userController, "GetUserByEmail").resolves(null)
-            sinon.stub(userController, "CreateUser").resolves(user)
-            sinon.stub(authController, "GetRefreshTokenFromUserId").rejects()
+            sinon.stub(userController, "CreateUser").rejects()
           })
 
           it("should reject", () => {
@@ -117,16 +102,15 @@ describe("Auth handler tests", () => {
           })
         })
 
-        describe("When GetRefreshTokenFromUserId database function succedes", () => {
-          describe("When CreateRefreshToken database function fails", () => {
+        describe("When CreateUser database function succedes", () => {
+          describe("When GetRefreshTokenFromUserId database function fails", () => {
             before(() => {
               mockedRequest = getMockedRequest({ body: user })
               mockedResponse = getMockedResponse()
 
               sinon.stub(userController, "GetUserByEmail").resolves(null)
               sinon.stub(userController, "CreateUser").resolves(user)
-              sinon.stub(authController, "GetRefreshTokenFromUserId").resolves(undefined)
-              sinon.stub(authController, "CreateRefreshToken").rejects()
+              sinon.stub(authController, "GetRefreshTokenFromUserId").rejects()
             })
 
             it("should reject", () => {
@@ -138,25 +122,47 @@ describe("Auth handler tests", () => {
             })
           })
 
-          describe("When CreateRefreshToken database function succedes", () => {
-            const refreshToken = getFakeRefreshToken() as { token: string; userId: mongoose.Types.ObjectId }
+          describe("When GetRefreshTokenFromUserId database function succedes", () => {
+            describe("When CreateRefreshToken database function fails", () => {
+              before(() => {
+                mockedRequest = getMockedRequest({ body: user })
+                mockedResponse = getMockedResponse()
 
-            before(() => {
-              mockedRequest = getMockedRequest({ body: user })
-              mockedResponse = getMockedResponse()
+                sinon.stub(userController, "GetUserByEmail").resolves(null)
+                sinon.stub(userController, "CreateUser").resolves(user)
+                sinon.stub(authController, "GetRefreshTokenFromUserId").resolves(undefined)
+                sinon.stub(authController, "CreateRefreshToken").rejects()
+              })
 
-              sinon.stub(userController, "GetUserByEmail").resolves(null)
-              sinon.stub(userController, "CreateUser").resolves(user)
-              sinon.stub(authController, "GetRefreshTokenFromUserId").resolves(undefined)
-              sinon.stub(authController, "CreateRefreshToken").resolves(refreshToken)
+              it("should reject", () => {
+                return expect(handler(mockedRequest, mockedResponse)).to.be.eventually.rejected
+              })
+
+              after(() => {
+                sinon.restore()
+              })
             })
 
-            it("should fulfil", () => {
-              return expect(handler(mockedRequest, mockedResponse)).to.be.eventually.fulfilled
-            })
+            describe("When CreateRefreshToken database function succedes", () => {
+              const refreshToken = getFakeRefreshToken() as { token: string; userId: mongoose.Types.ObjectId }
 
-            after(() => {
-              sinon.restore()
+              before(() => {
+                mockedRequest = getMockedRequest({ body: user })
+                mockedResponse = getMockedResponse()
+
+                sinon.stub(userController, "GetUserByEmail").resolves(null)
+                sinon.stub(userController, "CreateUser").resolves(user)
+                sinon.stub(authController, "GetRefreshTokenFromUserId").resolves(undefined)
+                sinon.stub(authController, "CreateRefreshToken").resolves(refreshToken)
+              })
+
+              it("should fulfil", () => {
+                return expect(handler(mockedRequest, mockedResponse)).to.be.eventually.fulfilled
+              })
+
+              after(() => {
+                sinon.restore()
+              })
             })
           })
         })
@@ -318,7 +324,7 @@ describe("Auth handler tests", () => {
 
           mockedResponse = getMockedResponse()
 
-          sinon.stub(token, "isExpired").resolves(true)
+          sinon.stub(token, "isExpired").resolves({} as UserPayload)
           sinon.stub(authController, "GetRefreshTokenFromToken").rejects()
         })
 
@@ -345,7 +351,7 @@ describe("Auth handler tests", () => {
 
             mockedResponse = getMockedResponse()
 
-            sinon.stub(token, "isExpired").resolves(true)
+            sinon.stub(token, "isExpired").resolves({} as UserPayload)
             sinon.stub(authController, "GetRefreshTokenFromToken").resolves(refreshToken)
             sinon.stub(userController, "GetUserByEmail").rejects()
           })
@@ -371,7 +377,7 @@ describe("Auth handler tests", () => {
 
               mockedResponse = getMockedResponse()
 
-              sinon.stub(token, "isExpired").resolves(true)
+              sinon.stub(token, "isExpired").resolves({} as UserPayload)
               sinon.stub(authController, "GetRefreshTokenFromToken").resolves(refreshToken)
               sinon.stub(userController, "GetUserByEmail").resolves(user)
               sinon.stub(authController, "DeleteRefreshTokenFromToken").rejects()
@@ -398,7 +404,7 @@ describe("Auth handler tests", () => {
 
                 mockedResponse = getMockedResponse()
 
-                sinon.stub(token, "isExpired").resolves(true)
+                sinon.stub(token, "isExpired").resolves({} as UserPayload)
                 sinon.stub(authController, "GetRefreshTokenFromToken").resolves(refreshToken)
                 sinon.stub(userController, "GetUserByEmail").resolves(user)
                 sinon.stub(authController, "DeleteRefreshTokenFromToken").resolves(refreshToken)
@@ -425,7 +431,7 @@ describe("Auth handler tests", () => {
 
                 mockedResponse = getMockedResponse()
 
-                sinon.stub(token, "isExpired").resolves(true)
+                sinon.stub(token, "isExpired").resolves({} as UserPayload)
                 sinon.stub(authController, "GetRefreshTokenFromToken").resolves(refreshToken)
                 sinon.stub(userController, "GetUserByEmail").resolves(user)
                 sinon.stub(authController, "DeleteRefreshTokenFromToken").resolves(refreshToken)
@@ -486,4 +492,4 @@ describe("Auth handler tests", () => {
       })
     })
   })
-})
+

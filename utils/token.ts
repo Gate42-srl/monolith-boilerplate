@@ -1,28 +1,29 @@
-import { isBefore, parseISO } from "date-fns"
 import { encrypter } from "."
 import { GetUserById } from "../controllers/userController"
-import { RefreshUserPayload, User, UserPayload } from "../types"
+import { AuthPayload, User, UserPayload } from "../types"
 
 /**
  * @function isNotExpired
- * @description If the current date is before the exp field in the JWT, the token is NOT expired
+ * @description If the token is expired returns "expired" else returns decoded token
  * @param {AuthPayload} token - AuthPayload - this is the decoded JWT token
- * @returns A boolean value.
+ * @returns A decoded token object or a string
  */
 //Check if the token has expired
-export const isExpired = async (type: string, token: any): Promise<boolean> => {
-  const dateToCheck: Date = new Date()
-
-  const tokenExpire =
-    type == "access"
-      ? (((await encrypter.decodeToken("access", token)) as UserPayload).expire as Date)
-      : (((await encrypter.decodeToken("refresh", token)) as RefreshUserPayload).expire as Date)
-
-  const expire: Date = tokenExpire instanceof Date === false ? parseISO(tokenExpire.toString()) : tokenExpire
-
-  //if Date.now() is before exp field in JWT, token is NOT expired
-  if (isBefore(dateToCheck, expire)) return false
-  else return true
+export const isExpired = async (type: string, token: any) => {
+  try {
+    switch (type) {
+      case "access":
+        return (await encrypter.decodeToken("access", token)) as AuthPayload
+      case "refresh":
+        return (await encrypter.decodeToken("refresh", token)) as AuthPayload
+      case "passwordReset":
+        return (await encrypter.decodeToken("passwordReset", token)) as AuthPayload
+      default:
+        return null
+    }
+  } catch (error: any) {
+    if (error.name === "TokenExpiredError") return "expired"
+  }
 }
 
 /**

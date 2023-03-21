@@ -43,7 +43,8 @@ describe("token utilty tests", () => {
       })
 
       it("should reject", () => {
-        return expect(func("access", "token")).to.be.eventually.rejected
+        expect(func("access", "token")).to.be.eventually.fulfilled
+        expect(func("access", "token")).to.be.eventually.equal("expired")
       })
 
       after(() => {
@@ -53,7 +54,13 @@ describe("token utilty tests", () => {
 
     describe("When decode token succedes", () => {
       before(() => {
-        sinon.stub(encrypter, "decodeToken").resolves({ expire: new Date(new Date().getTime() - 10000) } as UserPayload)
+        sinon.stub(encrypter, "decodeToken").resolves({
+          _id: "63f3974daffe19b9f50604d5",
+          email: "admin@apmverniciature.io",
+          role: "admin",
+          iat: 1678451086,
+          exp: 1678465486,
+        } as UserPayload)
       })
 
       it("should fulfil", () => {

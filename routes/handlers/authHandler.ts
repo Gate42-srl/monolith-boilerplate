@@ -1,4 +1,4 @@
-import { refreshToken, userClaims } from "../../types"
+import { RefreshUserPayload, refreshToken, userClaims } from "../../types"
 import { DoneFuncWithErrOrRes } from "fastify"
 
 import { validateBody } from "../../middlewares/requestValidator"
@@ -138,7 +138,7 @@ export const tokenRefreshHandler = async (req: any, res: any) => {
   const { refresh, authorization } = req.headers
 
   // Checks if access token is expired and so it is needed to refresh it
-  if (!(await isExpired("access", authorization))) res.code(200).send({ token: authorization, refreshToken: refresh })
+  if ((await isExpired("access", authorization)) !== "expired") res.code(200).send({ token: authorization, refreshToken: refresh })
 
   // Checks if the refresh token is present
   if (!refresh) res.code(401).send("Token not found")
@@ -146,7 +146,7 @@ export const tokenRefreshHandler = async (req: any, res: any) => {
   // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
   if (!(await GetRefreshTokenFromToken(refresh))) res.code(403).send("Invalid refresh token")
 
-  const { email } = await encrypter.decodeToken("refresh", refresh)
+  const { email } = await encrypter.decodeToken("refresh", refresh) as RefreshUserPayload
 
   // Calls database function to retrieve the user by its email
   const user = (await GetUserByEmail(email)) as any
