@@ -182,7 +182,7 @@ describe("auth middleware test", () => {
 
           sinon.stub(token, "isExpired").resolves({
             _id: "63f3974daffe19b9f50604d5",
-            email: "admin@apmverniciature.io",
+            email: "admin@boilerplate.io",
             role: "admin",
             iat: 1678451086,
             exp: 1678465486,
@@ -218,7 +218,7 @@ describe("auth middleware test", () => {
 
             sinon.stub(token, "isExpired").resolves({
               _id: "63f3974daffe19b9f50604d5",
-              email: "admin@apmverniciature.io",
+              email: "admin@boilerplate.io",
               role: "admin",
               iat: 1678451086,
               exp: 1678465486,
@@ -239,7 +239,7 @@ describe("auth middleware test", () => {
         describe("When user exists", () => {
           const decodedToken = {
             _id: "63f3974daffe19b9f50604d5",
-            email: "admin@apmverniciature.io",
+            email: "admin@boilerplate.io",
             role: "admin",
             iat: 1678451086,
             exp: 1678465486,

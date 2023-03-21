@@ -56,7 +56,7 @@ describe("token utilty tests", () => {
       before(() => {
         sinon.stub(encrypter, "decodeToken").resolves({
           _id: "63f3974daffe19b9f50604d5",
-          email: "admin@apmverniciature.io",
+          email: "admin@boilerplate.io",
           role: "admin",
           iat: 1678451086,
           exp: 1678465486,

@@ -1,3 +1,5 @@
 export * from "./addUserSchema"
 export * from "./updateUserSchema"
 export * from "./patchUserSchema"
+export * from "./adminFilterSchema"
+export * from "./changePasswordSchema"

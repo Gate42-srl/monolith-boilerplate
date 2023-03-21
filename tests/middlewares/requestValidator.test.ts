@@ -6,8 +6,8 @@ import chaiAsPromised from "chai-as-promised"
 const expect = chai.expect
 chai.use(chaiAsPromised)
 
-import { validateRequest } from "../../middlewares/requestValidator"
-import * as requestValidators from "../../validation/RequestValidators"
+import { validateRequest } from "../../validation/RequestValidators/requestValidator"
+import * as requestValidators from "../../validation/RequestValidators/schemaValidators"
 import * as testUtils from "../utils"
 
 describe("request validator middleware test", () => {

@@ -1,9 +1,11 @@
-import { RefreshUserPayload, refreshToken, userClaims } from "../../types"
+// TYPES
 import { DoneFuncWithErrOrRes } from "fastify"
+import { RefreshUserPayload, refreshToken, userClaims } from "../../types"
 
-import { validateBody } from "../../middlewares/requestValidator"
-import { validateAddUserSchema, validateLoginSchema } from "../../validation"
+// VALIDATION
+import { validateBody, validateAddUserSchema, validateLoginSchema, validatePasswordRecoverSchema } from "../../validation"
 
+// CONTROLLERS
 import {
   CreateRefreshToken,
   DeleteRefreshTokenFromToken,
@@ -12,8 +14,8 @@ import {
 } from "../../controllers/authController"
 import { CreateUser, GetUserByEmail, GetUserById, UpdateUser } from "../../controllers/userController"
 
-import { encrypter } from "../../utils"
-import { isExpired } from "../../utils/token"
+// UTILS
+import { BASE_URL, encrypter, isExpired, sendEmail } from "../../utils"
 
 // This handler is responsable for operations about authentication of users
 export function authHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes) {
@@ -23,6 +25,10 @@ export function authHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
 
   fastify.decorate("validateLoginBody", async (request: any, res: any) => {
     validateBody(validateLoginSchema)(request, res)
+  })
+
+  fastify.decorate("validateRecoverPasswordBody", async (request: any, res: any) => {
+    validateBody(validatePasswordRecoverSchema)(request, res)
   })
 
   fastify.post(
@@ -57,9 +63,18 @@ export function authHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
     retrieveUserHandler
   )
 
+  fastify.post(
+    "/recoverPassword",
+    {
+      preValidation: [fastify.validateRecoverPasswordBody],
+    },
+    recoverPasswordHandler
+  )
+
   done()
 }
 
+// Registration API
 export const signUpHandler = async (req: any, res: any) => {
   const { email } = req.body
 
@@ -96,6 +111,7 @@ export const signUpHandler = async (req: any, res: any) => {
   return res.code(200).send({ user, token, refreshToken })
 }
 
+// Login API
 export const loginHandler = async (req: any, res: any) => {
   const { email, password } = req.body
 
@@ -134,6 +150,7 @@ export const loginHandler = async (req: any, res: any) => {
   return res.code(200).send({ user, token, refreshToken })
 }
 
+// Refresh Token API
 export const tokenRefreshHandler = async (req: any, res: any) => {
   const { refresh, authorization } = req.headers
 
@@ -171,6 +188,7 @@ export const tokenRefreshHandler = async (req: any, res: any) => {
   return res.code(200).send({ token, refreshToken })
 }
 
+// Retrieve logged user API
 export const retrieveUserHandler = async (req: any, res: any) => {
   // Calls database function to retrieve the user from its id
   const user = await GetUserById(req.user._id)
@@ -180,3 +198,27 @@ export const retrieveUserHandler = async (req: any, res: any) => {
 
   return res.code(200).send(user)
 }
+
+// Recover password API
+export const recoverPasswordHandler = async (req: any, res: any) => {
+  const requestEmail = req.body.email
+
+  // Checks if user with given email exists
+  const user = await GetUserByEmail(requestEmail)
+  if (!user) return res.status(404).send("User not found")
+
+  // Generates recover password token
+  const { _id, email, role } = user as unknown as userClaims
+  const token = encrypter.generateJwt("passwordReset", { _id, email, role })
+
+  // Sends email about password recover
+  await sendEmail({
+    recipient: requestEmail,
+    subject: "Recover your password",
+    emailBody: `Hello. We've received your request to recover your password on your account. Follow the link below:\n ${BASE_URL}/react-app/?redirectTo=/passwordReset/&token=${token}`,
+    attachments: [],
+  })
+
+  return res.status(200).send(`Email sent to ${user.firstname} ${user.lastname}`)
+}
+

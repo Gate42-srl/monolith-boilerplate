@@ -1,12 +1,23 @@
+// TYPES
+import { DoneFuncWithErrOrRes } from "fastify"
+import { User, UserPayload } from "../../types"
+
+// MODELS
+import { UserModel, refreshTokenModel } from "../../models"
+
+// VALIDATION
 import { isValidObjectId } from "mongoose"
-import { validateBody } from "../../middlewares/requestValidator"
 import {
+  validateBody,
   userHandlerFactory,
   validateAddUserSchema,
   validateUpdateUserSchema,
   validatePatchUserSchema,
+  validateAdminFilterSchema,
+  validateChangePasswordSchema
 } from "../../validation"
 
+// CONTROLLERS
 import {
   CreateUser,
   DeleteUser,
@@ -16,8 +27,8 @@ import {
   UpdateUser,
 } from "../../controllers/userController"
 
-import { User } from "../../types"
-import { DoneFuncWithErrOrRes } from "fastify"
+// UTILS
+import { encrypter, isExpired } from "../../utils"
 
 // This handler is responsable for operations on users
 export function userHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes) {
@@ -62,6 +73,19 @@ export function userHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
   fastify.decorate("validatePatchUserBody", async (request: any, res: any) => {
     validateBody(validatePatchUserSchema)(request, res)
   })
+
+  fastify.decorate("validateAdminFilterBody", async (request: any, res: any) => {
+    validateBody(validateAdminFilterSchema)(request, res)
+  })
+
+  fastify.decorate("validateChangePasswordBody", async (request: any, res: any) => {
+    validateBody(validateChangePasswordSchema)(request, res)
+  })
+
+  fastify.decorate("parseJSON", async (request: any, res: any) => {
+    request.body = JSON.parse(request.body)
+  })
+
 
   fastify.get(
     "/",
@@ -123,9 +147,34 @@ export function userHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
     deleteUserHandler
   )
 
+  fastify.put(
+    "/blockUnblock/:id",
+    {
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.idValidatorParams],
+    },
+    blockUnblockHandler
+  )
+
+  fastify.post(
+    "/adminFilter",
+    {
+      preValidation: [fastify.authenticate, fastify.authorize, fastify.parseJSON, fastify.validateAdminFilterBody],
+    },
+    adminFilterHandler
+  )
+
+  fastify.patch(
+    "/changePassword",
+    {
+      preValidation: [fastify.parseJSON, fastify.validateChangePasswordBody],
+    },
+    changePasswordHandler
+  )
+
   done()
 }
 
+// Retrieve all users API
 export const allUsersHandler = async (req: any, res: any) => {
   // Calls database function to retrieve the user from its id
   const users = (await GetAllUsers()) as User[]
@@ -136,6 +185,7 @@ export const allUsersHandler = async (req: any, res: any) => {
   return res.code(200).send(users)
 }
 
+// Retrieve single user by its id API
 export const userByIdHandler = async (req: any, res: any) => {
   const id = req.params.id
 
@@ -148,6 +198,7 @@ export const userByIdHandler = async (req: any, res: any) => {
   return res.code(200).send(user)
 }
 
+// Create user API
 export const createUserHandler = async (req: any, res: any) => {
   const { email } = req.body as User
 
@@ -163,6 +214,7 @@ export const createUserHandler = async (req: any, res: any) => {
   return res.code(200).send(savedUser)
 }
 
+// Update user API
 export const updateUserHandler = async (req: any, res: any) => {
   const { email } = req.body as User
 
@@ -177,6 +229,7 @@ export const updateUserHandler = async (req: any, res: any) => {
   return res.code(200).send(updatedUser)
 }
 
+// Delete user API
 export const deleteUserHandler = async (req: any, res: any) => {
   const id = req.params.id
 
@@ -186,4 +239,54 @@ export const deleteUserHandler = async (req: any, res: any) => {
   if (!deletedUser) return res.code(404).send("User not found")
 
   return res.code(200).send(deletedUser)
+}
+
+// Block/Unblock user API
+export const blockUnblockHandler = async (req: any, res: any) => {
+  const userId = req.params.id
+
+  // Retrieves a user by given id
+  let user = (await GetUserById(userId)) as User
+  if (!user) return res.status(404).send("User not found")
+
+  // If the user is active: block it. If the user is blocked: unblock it.
+  if (user.status === "active") user = (await UpdateUser({ status: "blocked" }, userId)) as User
+  else user = (await UpdateUser({ status: "active" }, userId)) as User
+
+  // If the user is blocked removes token from DB
+  if (user.status === "blocked") await refreshTokenModel.deleteMany({ userId })
+
+  return res.status(200).send(user)
+}
+
+// Filters on users for Admin page API
+export const adminFilterHandler = async (req: any, res: any) => {
+  const Obj = {} as any
+  const filterFields = req.body
+
+  Object.keys(filterFields).forEach((key) => {
+    Obj[key] = { ...Obj[key], ...{ $in: filterFields[key].trim() } }
+  })
+
+  const filterUsers = await UserModel.find(Obj).sort({ firstname: 1 })
+
+  return res.status(200).send(filterUsers)
+}
+
+// Change password API
+export const changePasswordHandler = async (req: any, res: any) => {
+  // Decodes token and verifies expiration
+  const decodedToken = (await isExpired("passwordReset", req.headers.authorization)) as Partial<UserPayload> | string
+
+  // Verifies if token is invalid or expired
+  if (!decodedToken) return res.status(401).send("ResetPassword token not valid")
+  if (decodedToken === "expired") return res.status(401).send("ResetPassword token expired")
+
+  // Updates user with the new password
+  await UpdateUser(
+    { password: await encrypter.hashPassword(req.body.password) },
+    (decodedToken as Partial<UserPayload>)._id as string
+  )
+
+  res.status(200).send("Password changed")
 }

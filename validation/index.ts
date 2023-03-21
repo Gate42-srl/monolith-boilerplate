@@ -1,2 +1,3 @@
 export * from "./propertyValidator"
-export * from "./RequestValidators"
+export * from "./RequestValidators/"
+

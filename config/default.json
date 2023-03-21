@@ -15,5 +15,6 @@
   },
   "LOGGER": false,
   "LOCAL_ENVIRONMENT": false,
+  "BASE_URL": "https://your-deplyment-url",
   "BASE_LOCAL_URL": "http://localhost:5000"
 }

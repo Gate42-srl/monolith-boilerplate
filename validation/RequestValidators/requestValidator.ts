@@ -1,5 +1,5 @@
 import type { DefinedError, ValidateFunction } from "ajv"
-import { buildErrorMessage } from "../validation"
+import { buildErrorMessage } from "./schemaValidators"
 
 export const validateRequest = (field: "body" | "params" | "query" | "headers", validate: ValidateFunction) => {
   return (req: any, res: any) => {
