@@ -31,8 +31,8 @@ const PasswordResetForm = ({ token }: any) => {
 
   // function to handle when form fields are filled and submitted
   const handleOnSubmit = async (e: any) => {
-    if (!password || !repeatPass) return setMsg("Digitare la nuova password")
-    if (password !== repeatPass) return setMsg("Le password devono coincidere")
+    if (!password || !repeatPass) return setMsg("Input new password")
+    if (password !== repeatPass) return setMsg("Password must match")
 
     // resets error message and form
     setMsg("")
@@ -42,8 +42,8 @@ const PasswordResetForm = ({ token }: any) => {
     const result = await changePassword(token, { password })
 
     if (result === 400)
-      return setMsg("La password deve contenere minimo 8 caratteri, una maiuscola, una minuscola ed almeno un numero")
-    else if (result === 401) return setMsg("Richiesta scaduta. Si prega di riprovare.")
+      return setMsg("Password must contain at least 8 characters (low-case and upper-case) and a number.")
+    else if (result === 401) return setMsg("Expired request. Please try again.")
 
     // Changes card content
     setPressed(true)
@@ -68,10 +68,14 @@ const PasswordResetForm = ({ token }: any) => {
         />
       ) : null}
       <Card className="passwordForm">
-        <img src={Logo} alt="logo" className="passwordResetLogo"></img>
+        <img
+          src={"../static/media/logo.606557edb3f2a4dbb668.png" || Logo}
+          alt="logo"
+          className="passwordResetLogo"
+        ></img>
         {buttonPressed === false ? (
           <div>
-            <strong className="passwordResetFormTitle">{"Recupero password"}</strong>
+            <strong className="passwordResetFormTitle">{"Password Recover"}</strong>
             <Form
               initialValues={{
                 remember: true,

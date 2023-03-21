@@ -3,6 +3,7 @@ import { logger } from "../winston"
 
 const NO_REPLY_EMAIL = "no-reply@boilerplate.it"
 
+// MAIL TRANSPORTER
 /*const transporter: nodemailer.Transporter = nodemailer.createTransport({
   host: "smtp.ionos.it",
   port: 465,
@@ -22,7 +23,7 @@ const transporter: nodemailer.Transporter = nodemailer.createTransport({
   auth: {
     user: "",
     pass: "",
-  },
+  }, // Use some mailtrap account to test
 })
 
 // Sends an email to specified email address from "no-reply@boilerplate.it"

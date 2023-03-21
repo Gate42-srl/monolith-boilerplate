@@ -29,7 +29,7 @@ const AppNavbar = ({ auth, logout }: any) => {
           visibility: location.pathname === "/admin/" || location.pathname === "/admin" ? "visible" : "hidden",
         }}
       >
-        <img src={Logo} alt="logo" className="Logo"></img>
+        <img src={"../static/media/logo.606557edb3f2a4dbb668.png" || Logo} alt="logo" className="Logo"></img>
         <nav className="navlist">
           <ul className="list">
             <li className="role">{"Admin"}</li>

@@ -105,7 +105,7 @@ const Login = ({ isAuthenticated, error, login, clearErrors }: ILogin) => {
       >
         <div>
           <img
-            src={Logo}
+            src={"../static/media/logo.606557edb3f2a4dbb668.png" || Logo}
             alt="logo"
             style={{ height: "200px", textAlign: "center", marginLeft: "-90px", marginTop: "-20px" }}
           ></img>
