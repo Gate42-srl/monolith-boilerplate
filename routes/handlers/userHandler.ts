@@ -14,7 +14,7 @@ import {
   validateUpdateUserSchema,
   validatePatchUserSchema,
   validateAdminFilterSchema,
-  validateChangePasswordSchema
+  validateChangePasswordSchema,
 } from "../../validation"
 
 // CONTROLLERS
@@ -85,7 +85,6 @@ export function userHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
   fastify.decorate("parseJSON", async (request: any, res: any) => {
     request.body = JSON.parse(request.body)
   })
-
 
   fastify.get(
     "/",
@@ -283,10 +282,13 @@ export const changePasswordHandler = async (req: any, res: any) => {
   if (decodedToken === "expired") return res.status(401).send("ResetPassword token expired")
 
   // Updates user with the new password
-  await UpdateUser(
+  const user = await UpdateUser(
     { password: await encrypter.hashPassword(req.body.password) },
     (decodedToken as Partial<UserPayload>)._id as string
   )
+
+  // Verifies that user exists
+  if (!user) return res.status(404).send("User not found")
 
   res.status(200).send("Password changed")
 }

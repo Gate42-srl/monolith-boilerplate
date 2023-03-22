@@ -6,10 +6,10 @@ info:
 
 basePath: "/"
 tags:
-  - name: "user"
-    description: "Operations about user"
   - name: "auth"
     description: "Operations about authentication"
+  - name: "user"
+    description: "Operations about user"
   - name: "websocket"
     description: "Operations about websocket"
 schemes:
@@ -234,6 +234,128 @@ paths:
           schema:
             type: "string"
 
+  /users/blockUnblock/{id}:
+    put:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Blocks or unblocks user"
+      description: "Update given user found by its id, setting its status to 'blocked' or 'active' based on the action that needs to be done."
+      operationId: "blockUnblockUser"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          description: "User Id."
+          required: true
+          type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/UserSchema"
+        "400":
+          description: "path parameter contains an invalid Id"
+          schema:
+            type: "string"
+            default: "Invalid Id"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /users/adminFilter:
+    post:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Filter users for admin page"
+      description: "Filters users into given database following some criteria"
+      operationId: "adminUsersFilter"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "filter object"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                example: "some-email@gmail.com"
+              lastname:
+                type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/MoreUsersResponse"
+        "400":
+          description: "Request has an invalid field"
+          schema:
+            type: "string"
+            default: "The body field 'email' must be string"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /users/changePassword:
+    patch:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "user"
+      summary: "Change password"
+      description: "Changes password of the user within a specific token. Used for password recover."
+      operationId: "changePassword"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "new password"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              passowrd:
+                type: "string"
+                example: "newPassword1"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: "string"
+            example: "password changed"
+        "401":
+          description: "ResetPassword token invalid or expired"
+          schema:
+            type: "string"
+            default: "ResetPassword token not valid"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
   /auth/signup:
     post:
       tags:
@@ -358,6 +480,45 @@ paths:
           description: "Successful operation"
           schema:
             $ref: "#/definitions/UserSchema"
+        "404":
+          description: "User not found"
+          schema:
+            type: "string"
+            default: "User not found"
+        "500":
+          description: "Failure operation"
+          schema:
+            type: "string"
+
+  /auth/recoverPassword:
+    post:
+      security:
+        - ApiKeyAuth: []
+        - RefreshAuth: []
+      tags:
+        - "auth"
+      summary: "Sends email to the user that wants to retrieve their password"
+      description: "This api is used to let a user recover its password. It sends an email to the user which redirects them to a react page where they can reset their password."
+      operationId: "recoverPassword"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "email of the user that wants to recover their password"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                example: "some-email@gmail.com"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: "string"
+            example: "Email sent to John Doe"
         "404":
           description: "User not found"
           schema:
