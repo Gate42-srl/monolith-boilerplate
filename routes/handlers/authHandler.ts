@@ -99,7 +99,7 @@ export const signUpHandler = async (req: any, res: any) => {
 
   // Genereates access token
   const token = await encrypter.generateJwt("access", claims as userClaims)
-  if (!token) res.code(500).send("Error during token creation")
+  if (!token) return res.code(500).send("Error during token creation")
 
   // Calls database function to retrieve refresh token for the user if it already exists
   let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id.toString())) as refreshToken)?.token
@@ -107,7 +107,7 @@ export const signUpHandler = async (req: any, res: any) => {
   // If refresh token doesn't exist, generate it and save it on database
   if (!refreshToken) {
     refreshToken = (await encrypter.generateJwt("refresh", claims as userClaims)) as string
-    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+    if (!refreshToken) return res.code(500).send("Error during refresh token creation")
 
     // Calls database function to store the refresh token into the database
     await CreateRefreshToken({ token: refreshToken, userId: user._id })
@@ -138,7 +138,7 @@ export const loginHandler = async (req: any, res: any) => {
 
   // Genereates access token
   const token = await encrypter.generateJwt("access", claims)
-  if (!token) res.code(500).send("Error during token creation")
+  if (!token) return res.code(500).send("Error during token creation")
 
   // Calls database function to retrieve refresh token for the user if it already exists
   let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken)?.token
@@ -146,7 +146,7 @@ export const loginHandler = async (req: any, res: any) => {
   // If refresh token doesn't exist, generate it and save it on database
   if (!refreshToken) {
     refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
-    if (!refreshToken) res.code(500).send("Error during refresh token creation")
+    if (!refreshToken) return res.code(500).send("Error during refresh token creation")
 
     // Calls database function to store the refresh token into the database
     await CreateRefreshToken({ token: refreshToken, userId: user._id })
@@ -161,13 +161,13 @@ export const tokenRefreshHandler = async (req: any, res: any) => {
 
   // Checks if access token is expired and so it is needed to refresh it
   if ((await isExpired("access", authorization)) !== "expired")
-    res.code(200).send({ token: authorization, refreshToken: refresh })
+    return res.code(200).send({ token: authorization, refreshToken: refresh })
 
   // Checks if the refresh token is present
-  if (!refresh) res.code(401).send("Token not found")
+  if (!refresh) return res.code(401).send("Token not found")
 
   // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
-  if (!(await GetRefreshTokenFromToken(refresh))) res.code(403).send("Invalid refresh token")
+  if (!(await GetRefreshTokenFromToken(refresh))) return res.code(403).send("Invalid refresh token")
 
   const { email } = (await encrypter.decodeToken("refresh", refresh)) as RefreshUserPayload
 
@@ -179,10 +179,10 @@ export const tokenRefreshHandler = async (req: any, res: any) => {
 
   // Genereates new access and refresh tokens
   const token = await encrypter.generateJwt("access", claims)
-  if (!token) res.code(500).send("Error during token creation")
+  if (!token) return res.code(500).send("Error during token creation")
 
   const refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
-  if (!refreshToken) res.code(500).send("Error during refresh token creation")
+  if (!refreshToken) return res.code(500).send("Error during refresh token creation")
 
   // Calls database function to delete previous refresh token
   const tokenToDelete = await DeleteRefreshTokenFromToken(refresh)
@@ -200,7 +200,7 @@ export const retrieveUserHandler = async (req: any, res: any) => {
   const user = await GetUserById(req.user._id)
 
   // Checks if the user was found
-  if (!user) res.status(404).send("User not found")
+  if (!user) return res.status(404).send("User not found")
 
   return res.code(200).send(user)
 }
