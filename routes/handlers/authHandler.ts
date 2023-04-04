@@ -143,8 +143,11 @@ export const loginHandler = async (req: any, res: any) => {
   // Calls database function to retrieve refresh token for the user if it already exists
   let refreshToken: string | null = ((await GetRefreshTokenFromUserId(user._id)) as refreshToken)?.token
 
-  // If refresh token doesn't exist, generate it and save it on database
-  if (!refreshToken) {
+  // If refresh token doesn't exist or is expired, generate it and save it on database
+  if (!refreshToken || (await isExpired("refresh", refreshToken)) === "expired") {
+    // Calls DB function to delete refresh token if it was expired
+    if (refreshToken) await DeleteRefreshTokenFromToken(refreshToken)
+
     refreshToken = (await encrypter.generateJwt("refresh", claims)) as string
     if (!refreshToken) return res.code(500).send("Error during refresh token creation")
 
