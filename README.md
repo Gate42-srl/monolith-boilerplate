@@ -12,7 +12,7 @@
 
 ## Description
 
-monolith-boilerplate is a typescipt MERN application which uses fastify to handle API calls and react for admin page and a page for password recovery. It is capable of handle user registration, login and refresh its access token. It also implements a websocket connection with a notification system. The app is also capable of manage users with each of the CRUD basic operations and switch among multiple databases. As for this implementation, postgreSQL and MongoDB databases are supported but it's easy enough to add some more database modifing the index file into the **_"databases"_** folder along with a new configuration file for it.
+monolith-boilerplate is a typescipt MERN application which uses fastify to handle API calls and react for an admin page and a page for password recovery. It is capable of handle user registration, login and refresh their access token. It also implements a websocket connection with a notification system. The app is also capable of manage users with each of the CRUD basic operations and switch among multiple databases. As for this implementation, postgreSQL and MongoDB databases are supported but it's easy enough to add some more database modifing the index file into the **_"databases"_** folder along with a new configuration file for it.
 
 There are also tests suites already written and a swagger documentation which is usable by running the app and open, via browser:
 
