@@ -14,7 +14,7 @@
     "port": 5432
   },
   "LOGGER": false,
-  "LOCAL_ENVIRONMENT": false,
+  "LOCAL_ENVIRONMENT": true,
   "BASE_URL": "https://your-deplyment-url",
   "BASE_LOCAL_URL": "http://localhost:5000"
 }

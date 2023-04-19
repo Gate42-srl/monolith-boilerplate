@@ -129,6 +129,8 @@ export const loginHandler = async (req: any, res: any) => {
 
   if (!passwordMatched) return res.code(401).send("Wrong password")
 
+  if (user.status === "blocked") return res.code(401).send("Il tuo account risulta bloccato")
+
   // Calls database function to update last lagin field for user
   const updateLastLogin = await UpdateUser({ lastLogin: new Date() }, user._id)
 
