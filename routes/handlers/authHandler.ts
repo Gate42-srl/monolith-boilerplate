@@ -55,7 +55,7 @@ export function authHandler(fastify: any, opts: any, done: DoneFuncWithErrOrRes)
   fastify.post(
     "/token",
     {
-      preValidation: [fastify.authenticate],
+      preValidation: [],
     },
     tokenRefreshHandler
   )
@@ -164,17 +164,24 @@ export const loginHandler = async (req: any, res: any) => {
 export const tokenRefreshHandler = async (req: any, res: any) => {
   const { refresh, authorization } = req.headers
 
-  // Checks if access token is expired and so it is needed to refresh it
+  // Checks if both token and refresh token are present
+  if (!authorization || !refresh) return res.code(401).send("Token not found")
+
+  // Checks if access token is expired and needs to be refreshed
   if ((await isExpired("access", authorization)) !== "expired")
     return res.code(200).send({ token: authorization, refreshToken: refresh })
 
-  // Checks if the refresh token is present
-  if (!refresh) return res.code(401).send("Token not found")
-
   // Calls database function to retrieve refresh token and check if it exists into the database, so it is valid
-  if (!(await GetRefreshTokenFromToken(refresh))) return res.code(403).send("Invalid refresh token")
+  if (!(await GetRefreshTokenFromToken(refresh))) return res.code(401).send("Invalid refresh token")
 
-  const { email } = (await encrypter.decodeToken("refresh", refresh)) as RefreshUserPayload
+  // Decodes refresh token to check if it is expired and also retrieves user email
+  let email: string = ""
+  try {
+    email = ((await encrypter.decodeToken("refresh", refresh)) as RefreshUserPayload).email
+    if (!email) return res.code(401).send("Invalid refresh token")
+  } catch (error: any) {
+    if (error.name === "TokenExpiredError") return res.code(403).send("Refresh Token Expired")
+  }
 
   // Calls database function to retrieve the user by its email
   const user = (await GetUserByEmail(email)) as any
